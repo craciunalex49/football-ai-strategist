@@ -988,6 +988,100 @@ app.get("/stored-videos", async (req, res) => {
   }
 });
 
+async function fetchRecentFootballNews() {
+  const feeds = [
+    {
+      name: "GSP",
+      url: "https://www.gsp.ro/rss.xml"
+    },
+    {
+      name: "BBC Sport",
+      url: "https://feeds.bbci.co.uk/sport/football/rss.xml"
+    }
+  ];
+
+  function cleanText(value = "") {
+    return value
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim();
+  }
+
+  function getTag(item, tag) {
+    const match = item.match(
+      new RegExp(
+        `<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}\\s*>`,
+        "i"
+      )
+    );
+
+    return match ? cleanText(match[1]) : "";
+  }
+
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  const results = await Promise.allSettled(
+    feeds.map(async (feed) => {
+      const response = await fetch(feed.url, {
+        signal: AbortSignal.timeout(10000),
+        headers: {
+          "User-Agent": "FootballAIStrategist/1.0"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `${feed.name} RSS returned ${response.status}`
+        );
+      }
+
+      const xml = await response.text();
+      const items = xml.match(/<item(?:\s[^>]*)?>[\s\S]*?<\/item>/gi) || [];
+
+      return items.map((item) => {
+        const title = getTag(item, "title");
+        const link = getTag(item, "link");
+        const publishedAt = getTag(item, "pubDate");
+        const description = getTag(item, "description");
+        const publishedTimestamp = Date.parse(publishedAt);
+
+        return {
+          source: feed.name,
+          title,
+          url: link,
+          published_at: publishedAt,
+          description: description.slice(0, 500),
+          publishedTimestamp
+        };
+      }).filter((article) =>
+        article.title &&
+        article.url.startsWith("https://") &&
+        Number.isFinite(article.publishedTimestamp) &&
+        article.publishedTimestamp >= cutoff &&
+        article.publishedTimestamp <= Date.now()
+      );
+    })
+  );
+
+  const news = results
+    .filter((result) => result.status === "fulfilled")
+    .flatMap((result) => result.value);
+
+  const uniqueNews = [
+    ...new Map(news.map((item) => [item.url, item])).values()
+  ];
+
+  return uniqueNews
+    .sort((a, b) => b.publishedTimestamp - a.publishedTimestamp)
+    .slice(0, 20)
+    .map(({ publishedTimestamp, ...article }) => article);
+}
+
 // AI Content Strategist: generates ideas from real Supabase metrics.
 app.post("/ai-content-strategist", async (req, res) => {
   try {
@@ -1253,7 +1347,11 @@ FORMATUL FIECĂREI IDEI
 - metrics_to_track
 Răspunde în română. Generează exact 5 idei distincte.
 `;
+const recentFootballNews = await fetchRecentFootballNews();
 
+console.log(
+  `Football RSS: ${recentFootballNews.length} articole recente găsite.`
+);
     const userPayload = {
       focus: requestedFocus || "Alege ideile cu cel mai bun potențial pentru creșterea unui cont românesc de fotbal.",
       live_dataset: {
@@ -1283,6 +1381,7 @@ Răspunde în română. Generează exact 5 idei distincte.
           "traffic_sources"
         ]
       },
+     recent_news: recentFootballNews,
       historical_examples_not_live: historicalExamples
     };
 
@@ -1292,7 +1391,13 @@ Răspunde în română. Generează exact 5 idei distincte.
 
     const prompt = `
 Analizează datele următoare și generează exact 5 idei distincte.
-
+ACTUALITATE:
+- Folosește recent_news pentru ideile bazate pe știri recente.
+- Prioritizează articolele publicate în ultimele 7 zile.
+- Nu inventa date, evenimente sau statistici.
+- Folosește titlul, data și URL-ul articolului pentru fiecare idee de actualitate.
+- Dacă nu există suficiente știri relevante, generează idei istorice și etichetează-le clar.
+- Nu pretinde că ai verificat informații suplimentare.
 Returnează exclusiv un obiect JSON cu această structură:
 {
   "summary": "Rezumatul analizei",
