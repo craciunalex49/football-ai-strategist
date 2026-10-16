@@ -1,133 +1,306 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ro">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#07111f">
-<title>Football AI Strategist | Dashboard</title>
+<title>Football AI Strategist</title>
 <style>
-:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#07111f;--panel:#0d1a2b;--line:#243a56;--text:#edf5ff;--muted:#91a5bf;--blue:#3684ff;--cyan:#4bd8f2;--green:#40d6a0}
+:root{color-scheme:dark;font-family:Inter,Arial,sans-serif;background:#07111f;color:#edf5ff;--muted:#91a5bf;--line:#243a56;--blue:#3684ff;--cyan:#4bd8f2}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse at 12% 0,#12376b55,transparent 34rem),var(--bg);color:var(--text)}
+body{margin:0;background:radial-gradient(ellipse at 10% 0,#12376b55,transparent 35rem),#07111f}
 button,input,select{font:inherit}
-button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:11px;padding:11px 15px;background:linear-gradient(135deg,#3684ff,#1e63e9);color:white;font-weight:750;cursor:pointer;text-decoration:none}
+button,.btn{border:1px solid #294463;border-radius:11px;padding:11px 15px;background:linear-gradient(135deg,#3684ff,#1e63e9);color:white;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 button:disabled{opacity:.55;cursor:wait}
-.secondary{background:#142842!important;border-color:#294463!important;color:#dceaff!important}
-.ghost{background:transparent!important;border-color:var(--line)!important;color:var(--muted)!important}
-a{color:#81b7ff}
-header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;padding:15px max(18px,calc((100% - 1240px)/2));background:#07111fe8;border-bottom:1px solid #1d3048;backdrop-filter:blur(15px)}
-.brandwrap{display:flex;align-items:center;gap:12px}
-.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#398cff,#1451c8);font-size:21px}
-.brand{font-weight:850}.brand span{color:#6aa8ff}
-.subbrand{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
-main{max-width:1240px;margin:auto;padding:30px 20px 50px}
-.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}
-.eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:1.7px;font-size:11px;font-weight:850}
-h1{font-size:clamp(28px,4vw,42px);letter-spacing:-1px;margin:8px 0}
-.hero p,.muted{color:var(--muted);line-height:1.55}
-.hero p{margin:0;max-width:680px}
-.actions{display:flex;gap:9px;flex-wrap:wrap}
-.status{padding:13px 15px;border-radius:12px;border:1px solid #294a72;background:#102744;color:#cfe3ff;margin-bottom:20px;font-size:13px;line-height:1.5}
-.status.success{border-color:#1f5b4e;background:#0d2929;color:#c4f9e5}
-.status.error{border-color:#6a3547;background:#301925;color:#ffd7de}
+.secondary{background:#142842!important;color:#dceaff!important}
+header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px max(18px,calc((100% - 1240px)/2));background:#07111fee;border-bottom:1px solid #1d3048}
+.brand{display:flex;align-items:center;gap:12px;font-weight:850}
+.logo{background:linear-gradient(145deg,#398cff,#1451c8);padding:10px;border-radius:12px;font-size:22px}
+.brand span{color:#6aa8ff}
+.sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:3px}
+main{max-width:1240px;margin:auto;padding:28px 20px 50px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.eyebrow{font-size:11px;letter-spacing:1.7px;color:var(--cyan);font-weight:850}
+h1{font-size:clamp(28px,4vw,42px);margin:8px 0;letter-spacing:-1px}
+h2{font-size:18px;margin:0}
+p{color:var(--muted);line-height:1.55}
+.actions,.filters{display:flex;gap:9px;flex-wrap:wrap}
+.status{padding:13px 15px;border:1px solid #294a72;background:#102744;border-radius:12px;margin-bottom:18px;font-size:13px;line-height:1.5}
+.success{border-color:#1f5b4e!important;background:#0d2929!important;color:#c4f9e5}
+.error{border-color:#6a3547!important;background:#301925!important;color:#ffd7de}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .stat,.panel{background:linear-gradient(145deg,#0f1f33,#0b1727);border:1px solid var(--line);border-radius:17px;min-width:0;box-shadow:0 12px 30px #0002}
-.stat{padding:18px}.label{color:var(--muted);font-size:13px}
-.value{font-size:clamp(24px,3vw,33px);font-weight:850;margin-top:13px;letter-spacing:-.7px;overflow-wrap:anywhere}
-.foot{color:#6f87a5;font-size:11px;margin-top:5px}
-.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr);gap:18px;align-items:start}
+.stat{padding:18px}
+.label{font-size:13px;color:var(--muted)}
+.value{font-size:clamp(24px,3vw,33px);font-weight:850;margin-top:13px;overflow-wrap:anywhere}
+.foot{font-size:11px;color:#6f87a5;margin-top:5px}
 .panel{padding:19px;margin-bottom:18px}
-.panelhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:17px}
-h2{font-size:18px;margin:0}.panelsub{font-size:12px;color:var(--muted);margin-top:6px}
-.filters{display:flex;gap:8px;flex-wrap:wrap}
-input,select{padding:10px 11px;max-width:100%;min-width:0;border:1px solid #2b405b;border-radius:10px;background:#091626;color:var(--text)}
-input:focus,select:focus{outline:2px solid #3684ff66}
+.panelhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.panelsub{font-size:12px;color:var(--muted);margin-top:6px}
+input,select{padding:10px 11px;border:1px solid #2b405b;border-radius:10px;background:#091626;color:#edf5ff;max-width:100%;min-width:0}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr);gap:18px;align-items:start}
 .videos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.video{overflow:hidden;min-width:0;background:#0a1727;border:1px solid #213650;border-radius:14px}
+.video{overflow:hidden;background:#0a1727;border:1px solid #213650;border-radius:14px;min-width:0}
 .cover{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#14243a}
-.vbody{padding:13px}.vtitle{font-size:14px;font-weight:750;line-height:1.45;overflow-wrap:anywhere}
+.vbody{padding:13px}
+.vtitle{font-size:14px;font-weight:750;line-height:1.45;overflow-wrap:anywhere}
 .vmeta{font-size:11px;color:var(--muted);margin:7px 0 12px}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .metric{background:#102137;padding:9px;border-radius:9px}
-.metric strong{display:block;font-size:15px;overflow-wrap:anywhere}
+.metric strong{display:block;font-size:15px}
 .metric span{font-size:11px;color:var(--muted)}
-.rate{display:inline-block;margin-top:11px;font-size:11px;color:#9cebd0;background:#10342f;border:1px solid #1d5148;border-radius:20px;padding:5px 8px}
-.vactions{margin-top:12px}.vactions .btn{font-size:12px;padding:8px 10px}
-.ranklist{display:flex;flex-direction:column;gap:15px}
-.rank{display:grid;grid-template-columns:29px minmax(0,1fr) auto;gap:9px;align-items:center}
-.rankno{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#17345a;color:#9cc8ff;font-size:12px;font-weight:800}
+.pill{display:inline-block;margin-top:11px;font-size:11px;color:#9cebd0;background:#10342f;border:1px solid #1d5148;border-radius:20px;padding:5px 8px}
+.chart{width:100%;overflow:hidden}
+.chart svg{display:block;width:100%;height:auto}
+.insight{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid #1d3047}
+.insight:last-child{border:0}
+.insighticon{flex:0 0 34px;height:34px;border-radius:10px;background:#15365a;display:grid;place-items:center;color:#8cc7ff}
+.insighttitle{font-size:13px;font-weight:800}
+.insighttext{font-size:12px;color:var(--muted);line-height:1.55;margin-top:4px}
+.rank{display:grid;grid-template-columns:29px minmax(0,1fr) auto;gap:9px;align-items:center;margin:14px 0}
+.rankno{padding:7px;border-radius:8px;background:#17345a;color:#9cc8ff;font-size:12px;font-weight:800}
 .ranktitle,.growthtitle{font-size:12px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
 .rankdetail,.growthdetail{font-size:11px;color:var(--muted);margin-top:4px}
-.rankval{font-size:12px;font-weight:800;white-space:nowrap}
+.rankval{font-size:12px;font-weight:800}
 .track{height:5px;background:#1a2a40;border-radius:20px;margin-top:7px;overflow:hidden}
-.bar{height:100%;background:linear-gradient(90deg,#2563eb,#4bd8f2);border-radius:inherit}
+.bar{height:100%;background:linear-gradient(90deg,#2563eb,#4bd8f2)}
 .growthitem{padding:12px 0;border-bottom:1px solid #1d3047}
-.growthitem:last-child{border:0}
 .growthtop{display:flex;justify-content:space-between;gap:10px}
-.growthnum{color:var(--green);font-size:12px;font-weight:800;white-space:nowrap}
-.empty{color:var(--muted);font-size:13px;padding:18px 0;line-height:1.6}
-.note{color:var(--muted);font-size:11px;line-height:1.6;margin-top:12px}
-footer{border-top:1px solid #1b2b40;color:#6e829c;text-align:center;font-size:12px;padding:24px}
-footer a{margin:0 5px}
-@media(max-width:950px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
-@media(max-width:680px){header{padding:12px 14px}main{padding:24px 13px 38px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:13px}.videos{grid-template-columns:1fr}.side{display:block}.panel{padding:14px}.actions{width:100%}.actions button,.actions a{flex:1}}
+.growthnum{color:#40d6a0;font-size:12px;font-weight:800;white-space:nowrap}
+.empty{color:var(--muted);font-size:13px;padding:16px 0;line-height:1.6}
+.note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px}
+footer{text-align:center;padding:24px;color:#6e829c;font-size:12px;border-top:1px solid #1b2b40}
+footer a{color:#81b7ff}
+@media(max-width:950px){.layout{grid-template-columns:1fr}}
+@media(max-width:680px){header{padding:12px 14px}main{padding:22px 13px 35px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:13px}.videos{grid-template-columns:1fr}.panel{padding:14px}.actions{width:100%}.actions button{flex:1}}
 </style>
 </head>
 <body>
 <header>
-  <div class="brandwrap">
+  <div class="brand">
     <div class="logo">⚽</div>
-    <div><div class="brand">Football <span>AI Strategist</span></div><div class="subbrand">TikTok performance studio</div></div>
+    <div>Football <span>AI Strategist</span><div class="sub">TIKTOK PERFORMANCE STUDIO</div></div>
   </div>
   <a class="btn secondary" href="https://football-ai-strategist-api.onrender.com/oauth">↗ Conectează TikTok</a>
 </header>
 <main>
   <section class="hero">
-    <div><div class="eyebrow">Creator analytics</div><h1>Dashboard de performanță</h1><p>Înțelege ce funcționează, identifică videoclipurile cu rezultate bune și urmărește evoluția contului tău de fotbal.</p></div>
-    <div class="actions"><button id="sync">↻ Sincronizează TikTok</button><button id="analyze" class="secondary">✦ Analizează clipurile</button></div>
+    <div>
+      <div class="eyebrow">CREATOR ANALYTICS</div>
+      <h1>Dashboard de performanță</h1>
+      <p>Înțelege ce funcționează, identifică videoclipurile cu rezultate bune și urmărește evoluția contului tău de fotbal.</p>
+    </div>
+    <div class="actions">
+      <button id="sync">↻ Sincronizează TikTok</button>
+      <button id="analyze" class="secondary">✦ Analizează clipurile</button>
+    </div>
   </section>
-  <div id="status" class="status" role="status" aria-live="polite">Se încarcă datele salvate… Prima cerere poate dura până la 50 de secunde.</div>
+
+  <div id="status" class="status" role="status">Se încarcă datele salvate… Prima cerere poate dura până la 50 de secunde.</div>
+
   <section class="stats">
     <div class="stat"><div class="label">Videoclipuri salvate</div><div id="totalVideos" class="value">—</div><div class="foot">Importate în baza de date</div></div>
     <div class="stat"><div class="label">Total vizualizări</div><div id="totalViews" class="value">—</div><div class="foot">Pentru clipurile sincronizate</div></div>
     <div class="stat"><div class="label">Total aprecieri</div><div id="totalLikes" class="value">—</div><div class="foot">Like-uri cumulate</div></div>
-    <div class="stat"><div class="label">Engagement mediu</div><div id="engagement" class="value">—</div><div class="foot">Interacțiuni / vizualizări</div></div>
+    <div class="stat"><div class="label">Engagement total</div><div id="engagement" class="value">—</div><div class="foot">Interacțiuni / vizualizări</div></div>
   </section>
+
+  <section class="panel">
+    <div class="panelhead"><div><h2>Performanța clipurilor</h2><div class="panelsub">Top 7 videoclipuri după vizualizări, din ultima sincronizare</div></div><span class="pill">Date din Supabase</span></div>
+    <div id="viewsChart" class="chart"><div class="empty">Se pregătește graficul…</div></div>
+    <div class="note">Graficul compară vizualizările totale ale clipurilor, nu evoluția lor în timp.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panelhead"><div><h2>Recomandări pentru următorul clip</h2><div class="panelsub">Sugestii statistice generate din videoclipurile tale</div></div><span class="pill">Data-driven</span></div>
+    <div id="insights"><div class="empty">Se analizează statisticile…</div></div>
+    <div class="note">Acestea sunt recomandări bazate pe reguli și statistici, nu predicții garantate sau răspunsuri de la un model AI conectat.</div>
+  </section>
+
   <div class="layout">
     <section class="panel">
-      <div class="panelhead"><div><h2>Biblioteca videoclipurilor</h2><div id="videoSub" class="panelsub">Videoclipuri sincronizate din TikTok</div></div>
-        <div class="filters"><input id="search" type="search" placeholder="Caută un clip…" aria-label="Caută videoclip"><select id="sort" aria-label="Sortează"><option value="views">Cele mai vizualizate</option><option value="likes">Cele mai apreciate</option><option value="engagement">Engagement ridicat</option><option value="recent">Cele mai recente</option></select></div>
+      <div class="panelhead">
+        <div><h2>Biblioteca videoclipurilor</h2><div id="videoSub" class="panelsub">Videoclipuri sincronizate din TikTok</div></div>
+        <div class="filters">
+          <input id="search" type="search" placeholder="Caută un clip…" aria-label="Caută videoclip">
+          <select id="sort" aria-label="Sortează videoclipurile">
+            <option value="views">Cele mai vizualizate</option>
+            <option value="likes">Cele mai apreciate</option>
+            <option value="engagement">Engagement ridicat</option>
+            <option value="recent">Cele mai recente</option>
+          </select>
+        </div>
       </div>
-      <div id="videos" class="videos"><p class="empty">Se încarcă videoclipurile…</p></div>
+      <div id="videos" class="videos"><div class="empty">Se încarcă videoclipurile…</div></div>
     </section>
-    <aside class="side">
-      <section class="panel"><div class="panelhead"><div><h2>Top engagement</h2><div class="panelsub">Cele mai bune rate de interacțiune</div></div></div><div id="topEngagement" class="ranklist"><div class="empty">Apasă „Analizează clipurile” pentru clasament.</div></div><div class="note">Clasamentul compară ratele de engagement ale videoclipurilor analizate.</div></section>
-      <section class="panel"><div class="panelhead"><div><h2>Creștere recentă</h2><div class="panelsub">Diferența dintre ultimele două sincronizări</div></div><button id="refreshGrowth" class="ghost" aria-label="Actualizează creșterea">↻</button></div><div id="growth"><div class="empty">Se încarcă istoricul…</div></div><div class="note">Sincronizează din nou după câteva ore sau a doua zi pentru o comparație mai utilă.</div></section>
+
+    <aside>
+      <section class="panel">
+        <div class="panelhead"><div><h2>Top engagement</h2><div class="panelsub">Cele mai bune rate de interacțiune</div></div></div>
+        <div id="topEngagement"><div class="empty">Apasă „Analizează clipurile” pentru clasament.</div></div>
+      </section>
+      <section class="panel">
+        <div class="panelhead"><div><h2>Creștere recentă</h2><div class="panelsub">Diferența dintre ultimele două sincronizări</div></div><button id="refreshGrowth" class="secondary" title="Actualizează istoricul">↻</button></div>
+        <div id="growth"><div class="empty">Se încarcă istoricul…</div></div>
+      </section>
     </aside>
   </div>
-  <p class="note">Engagement = (aprecieri + comentarii + distribuiri) ÷ vizualizări × 100. Statisticile reflectă ultima sincronizare disponibilă.</p>
 </main>
 <footer>Football AI Strategist · <a href="privacy-policy.html">Confidențialitate</a> · <a href="terms-of-service.html">Termeni</a></footer>
+
 <script>
-const API="https://football-ai-strategist-api.onrender.com";let videos=[],busy=false;
-const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString("ro-RO"),pct=n=>n==null||!Number.isFinite(Number(n))?"—":Number(n).toLocaleString("ro-RO",{maximumFractionDigits:2})+"%";
-const titleOf=v=>v.title||v.description||v.video_description||"Videoclip TikTok";
-const views=v=>Number(v.view_count??v.views??0),likes=v=>Number(v.like_count??v.likes??0),comments=v=>Number(v.comment_count??v.comments??0),shares=v=>Number(v.share_count??v.shares??0);
-const rate=v=>views(v)>0?(likes(v)+comments(v)+shares(v))/views(v)*100:null;
-function status(msg,type=""){$("status").className="status"+(type?" "+type:"");$("status").textContent=msg}
-async function req(path){const r=await fetch(API+path);const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||d.message||`Cerere eșuată (${r.status})`);return d}
-function busyState(v){busy=v;["sync","analyze","refreshGrowth"].forEach(id=>$(id).disabled=v)}
-function dateOf(v){if(!v.create_time)return"Dată indisponibilă";const d=typeof v.create_time==="number"||/^\d+$/.test(String(v.create_time))?new Date(Number(v.create_time)*1000):new Date(v.create_time);return isNaN(d)?"Dată indisponibilă":d.toLocaleDateString("ro-RO")}
-function renderStats(){let v=videos.reduce((s,x)=>s+views(x),0),l=videos.reduce((s,x)=>s+likes(x),0),c=videos.reduce((s,x)=>s+comments(x),0),sh=videos.reduce((s,x)=>s+shares(x),0);$("totalVideos").textContent=fmt(videos.length);$("totalViews").textContent=fmt(v);$("totalLikes").textContent=fmt(l);$("engagement").textContent=v?pct((l+c+sh)/v*100):"—";$("videoSub").textContent=fmt(videos.length)+" videoclipuri salvate în baza de date"}
-function renderVideos(){let q=$("search").value.toLowerCase().trim(),s=$("sort").value,a=videos.filter(v=>titleOf(v).toLowerCase().includes(q));a.sort((x,y)=>s==="likes"?likes(y)-likes(x):s==="engagement"?(rate(y)??-1)-(rate(x)??-1):s==="recent"?new Date(y.create_time||0)-new Date(x.create_time||0):views(y)-views(x));let box=$("videos");box.replaceChildren();if(!a.length){let p=document.createElement("p");p.className="empty";p.textContent=videos.length?"Nu există rezultate pentru căutare.":"Nu există clipuri salvate. Apasă «Sincronizează TikTok».";box.append(p);return}a.forEach(v=>{let card=document.createElement("article");card.className="video";let img=document.createElement("img");img.className="cover";img.alt="Coperta videoclipului";img.loading="lazy";if(v.cover_image_url)img.src=v.cover_image_url;img.onerror=()=>img.style.display="none";let body=document.createElement("div");body.className="vbody";let h=document.createElement("div");h.className="vtitle";h.textContent=titleOf(v);let meta=document.createElement("div");meta.className="vmeta";meta.textContent=dateOf(v)+" · "+Number(v.duration||0)+" sec";let ms=document.createElement("div");ms.className="metrics";[["Vizualizări",views(v)],["Aprecieri",likes(v)],["Comentarii",comments(v)],["Distribuiri",shares(v)]].forEach(([t,n])=>{let m=document.createElement("div");m.className="metric";let b=document.createElement("strong");b.textContent=fmt(n);let sp=document.createElement("span");sp.textContent=t;m.append(b,sp);ms.append(m)});let r=document.createElement("span");r.className="rate";r.textContent="Engagement "+pct(rate(v));body.append(h,meta,ms,r);if(v.share_url){let act=document.createElement("div");act.className="vactions";let link=document.createElement("a");link.className="btn secondary";link.href=v.share_url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Vezi pe TikTok ↗";act.append(link);body.append(act)}card.append(img,body);box.append(card)})}
-async function loadVideos(show=true){let d=await req("/stored-videos");videos=d.videos||[];renderStats();renderVideos();if(show)status(`Date încărcate: ${fmt(videos.length)} videoclipuri din Supabase.`,"success")}
-async function loadGrowth(){let box=$("growth");try{let d=await req("/video-growth"),list=(d.top_by_view_growth||[]).filter(x=>Number(x.views_gained)>0).slice(0,6);box.replaceChildren();if(!list.length){box.innerHTML='<div class="empty">Nu există încă o creștere a vizualizărilor între ultimele două sincronizări. Încearcă din nou peste câteva ore.</div>';return}list.forEach(v=>{let item=document.createElement("div");item.className="growthitem";let top=document.createElement("div");top.className="growthtop";let name=document.createElement("div");name.className="growthtitle";let match=videos.find(x=>String(x.video_id)===String(v.video_id));name.textContent=match?titleOf(match):"Videoclip "+String(v.video_id).slice(0,10)+"…";let n=document.createElement("div");n.className="growthnum";n.textContent="+"+fmt(v.views_gained)+" viz.";top.append(name,n);let detail=document.createElement("div");detail.className="growthdetail";detail.textContent="+"+fmt(v.likes_gained)+" aprecieri · +"+fmt(v.comments_gained)+" comentarii · +"+fmt(v.shares_gained)+" distribuiri";item.append(top,detail);box.append(item)})}catch(e){box.innerHTML='<div class="empty">Istoricul nu a putut fi încărcat. Încearcă din nou.</div>'}}
-function renderAnalysis(d){let box=$("topEngagement"),list=(d.videos||[]).filter(v=>v.engagement_rate!=null).sort((a,b)=>b.engagement_rate-a.engagement_rate).slice(0,5);box.replaceChildren();if(!list.length){box.innerHTML='<div class="empty">Nu există date suficiente pentru clasament.</div>';return}let max=Math.max(...list.map(v=>Number(v.engagement_rate)||0),.01);list.forEach((v,i)=>{let row=document.createElement("div");row.className="rank";let no=document.createElement("div");no.className="rankno";no.textContent=String(i+1).padStart(2,"0");let main=document.createElement("div");let name=document.createElement("div");name.className="ranktitle";let match=videos.find(x=>String(x.video_id)===String(v.video_id));name.textContent=v.title||(match?titleOf(match):"Videoclip TikTok");let det=document.createElement("div");det.className="rankdetail";det.textContent=fmt(v.views)+" vizualizări";let track=document.createElement("div");track.className="track";let bar=document.createElement("div");bar.className="bar";bar.style.width=Math.min(100,Number(v.engagement_rate)/max*100)+"%";track.append(bar);main.append(name,det,track);let val=document.createElement("div");val.className="rankval";val.textContent=pct(v.engagement_rate);row.append(no,main,val);box.append(row)});status(`Analiză finalizată pentru ${fmt(d.analyzed||d.videos.length)} videoclipuri. Engagement mediu per videoclip: ${pct(d.average_engagement_rate)}.`,"success")}
-$("sync").addEventListener("click",async()=>{if(busy)return;busyState(true);status("Se sincronizează videoclipurile TikTok și se salvează istoricul…");try{let d=await req("/sync-videos");await loadVideos(false);await loadGrowth();status(`Sincronizare reușită: ${fmt(d.synced)} înregistrări procesate în ${fmt(d.pages)} pagini. ${d.message||""}`,"success")}catch(e){status(e.message+" Dacă TikTok cere reconectare, apasă «Conectează TikTok».","error")}finally{busyState(false)}});
-$("analyze").addEventListener("click",async()=>{if(busy)return;busyState(true);status("Se analizează engagementul videoclipurilor…");try{renderAnalysis(await req("/analyze-videos"))}catch(e){status("Analiza nu a reușit: "+e.message,"error")}finally{busyState(false)}});
-$("refreshGrowth").addEventListener("click",async()=>{if(busy)return;busyState(true);try{await loadGrowth();status("Istoricul creșterii a fost actualizat.","success")}finally{busyState(false)}});
-$("search").addEventListener("input",renderVideos);$("sort").addEventListener("change",renderVideos);
+const API="https://football-ai-strategist-api.onrender.com";
+const $=id=>document.getElementById(id);
+let videos=[],busy=false;
+
+const num=n=>Number(n||0);
+const fmt=n=>num(n).toLocaleString("ro-RO");
+const compact=n=>n>=1e6?(n/1e6).toLocaleString("ro-RO",{maximumFractionDigits:1})+"M":n>=1e3?(n/1e3).toLocaleString("ro-RO",{maximumFractionDigits:1})+"k":String(n);
+const titleOf=v=>v.title||v.video_description||v.description||"Videoclip TikTok";
+const views=v=>num(v.view_count??v.views);
+const likes=v=>num(v.like_count??v.likes);
+const comments=v=>num(v.comment_count??v.comments);
+const shares=v=>num(v.share_count??v.shares);
+const rate=v=>views(v)?(likes(v)+comments(v)+shares(v))/views(v)*100:0;
+const pct=n=>num(n).toLocaleString("ro-RO",{maximumFractionDigits:2})+"%";
+const dateOf=v=>{if(!v.create_time)return"Data indisponibilă";let d=String(v.create_time).match(/^\d+$/)?new Date(Number(v.create_time)*1000):new Date(v.create_time);return isNaN(d)?"Data indisponibilă":d.toLocaleDateString("ro-RO")};
+function status(msg,type=""){ $("status").textContent=msg;$("status").className="status "+type; }
+function busyState(on){busy=on;["sync","analyze","refreshGrowth"].forEach(id=>$(id).disabled=on)}
+async function req(path,options={}){
+  const r=await fetch(API+path,options);
+  let d;try{d=await r.json()}catch{throw new Error("Serverul nu a returnat un răspuns valid.")}
+  if(!r.ok||d.success===false)throw new Error(d.error||d.message||"Cererea a eșuat ("+r.status+").");
+  return d;
+}
+function renderStats(){
+  const v=videos.reduce((s,x)=>s+views(x),0),l=videos.reduce((s,x)=>s+likes(x),0);
+  const interactions=videos.reduce((s,x)=>s+likes(x)+comments(x)+shares(x),0);
+  $("totalVideos").textContent=fmt(videos.length);
+  $("totalViews").textContent=fmt(v);
+  $("totalLikes").textContent=fmt(l);
+  $("engagement").textContent=v?pct(interactions/v*100):"—";
+  $("videoSub").textContent=fmt(videos.length)+" videoclipuri salvate în baza de date";
+}
+function renderVideos(){
+  const q=$("search").value.toLowerCase().trim(),s=$("sort").value;
+  const arr=videos.filter(v=>titleOf(v).toLowerCase().includes(q));
+  arr.sort((a,b)=>s==="likes"?likes(b)-likes(a):s==="engagement"?rate(b)-rate(a):s==="recent"?new Date(b.create_time||0)-new Date(a.create_time||0):views(b)-views(a));
+  const box=$("videos");box.replaceChildren();
+  if(!arr.length){box.innerHTML='<div class="empty">Nu există rezultate. Încearcă altă căutare sau sincronizează TikTok.</div>';return}
+  arr.forEach(v=>{
+    const card=document.createElement("article");card.className="video";
+    if(v.cover_image_url){const img=document.createElement("img");img.className="cover";img.loading="lazy";img.alt="Coperta videoclipului";img.src=v.cover_image_url;img.onerror=()=>img.style.display="none";card.append(img)}
+    const body=document.createElement("div");body.className="vbody";
+    const title=document.createElement("div");title.className="vtitle";title.textContent=titleOf(v);
+    const meta=document.createElement("div");meta.className="vmeta";meta.textContent=dateOf(v)+" · "+num(v.duration)+" secunde";
+    const metrics=document.createElement("div");metrics.className="metrics";
+    [["Vizualizări",views(v)],["Aprecieri",likes(v)],["Comentarii",comments(v)],["Distribuiri",shares(v)]].forEach(([label,n])=>{const m=document.createElement("div");m.className="metric";const b=document.createElement("strong");b.textContent=fmt(n);const t=document.createElement("span");t.textContent=label;m.append(b,t);metrics.append(m)});
+    const r=document.createElement("span");r.className="pill";r.textContent="Engagement "+pct(rate(v));
+    body.append(title,meta,metrics,r);
+    if(v.share_url){const a=document.createElement("a");a.className="btn secondary";a.style.marginTop="12px";a.href=v.share_url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Vezi pe TikTok ↗";body.append(a)}
+    card.append(body);box.append(card);
+  });
+}
+function renderChart(){
+  const box=$("viewsChart");box.replaceChildren();
+  const arr=[...videos].sort((a,b)=>views(b)-views(a)).slice(0,7);
+  if(!arr.length){box.innerHTML='<div class="empty">Sincronizează videoclipurile pentru a vedea graficul.</div>';return}
+  const W=760,H=260,L=48,R=12,T=18,B=62,pw=W-L-R,ph=H-T-B,max=Math.max(...arr.map(views),1);
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const el=(tag,attrs,text)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text!==undefined)n.textContent=text;svg.append(n);return n};
+  for(let i=0;i<=4;i++){const y=T+ph*i/4;el("line",{x1:L,y1:y,x2:W-R,y2:y,stroke:"#263b55","stroke-dasharray":"4 5"});el("text",{x:L-8,y:y+4,"text-anchor":"end",fill:"#91a5bf","font-size":"10"},compact(max*(1-i/4)))}
+  const step=pw/arr.length,bw=Math.min(54,step*.58);
+  arr.forEach((v,i)=>{const x=L+i*step+(step-bw)/2,h=views(v)/max*ph,y=T+ph-h;el("rect",{x,y,width:bw,height:Math.max(2,h),rx:6,fill:"#3684ff"});el("rect",{x,y,width:bw,height:Math.min(4,h),rx:2,fill:"#4bd8f2"});el("text",{x:x+bw/2,y:Math.max(12,y-6),"text-anchor":"middle",fill:"#dceaff","font-size":"10"},compact(views(v)));let label=titleOf(v);if(label.length>15)label=label.slice(0,14)+"…";el("text",{x:x+bw/2,y:T+ph+18,"text-anchor":"end",transform:`rotate(-30 ${x+bw/2} ${T+ph+18})`,fill:"#91a5bf","font-size":"10"},label)});
+  box.append(svg);
+}
+function renderInsights(){
+  const box=$("insights");box.replaceChildren();
+  if(!videos.length){box.innerHTML='<div class="empty">Nu există date. Sincronizează contul TikTok.</div>';return}
+  const valid=videos.filter(v=>views(v)>0).sort((a,b)=>views(b)-views(a));
+  if(!valid.length){box.innerHTML='<div class="empty">Clipurile nu au încă vizualizări disponibile.</div>';return}
+  const top=valid[0],threshold=Math.max(100,views(top)*.1);
+  const best=[...valid].filter(v=>views(v)>=threshold).sort((a,b)=>rate(b)-rate(a))[0];
+  const short=valid.filter(v=>num(v.duration)>0&&num(v.duration)<=30);
+  const long=valid.filter(v=>num(v.duration)>60);
+  const avg=a=>a.length?a.reduce((s,v)=>s+rate(v),0)/a.length:null;
+  const as=avg(short),al=avg(long);
+  const items=[
+    ["↗","Folosește cel mai vizualizat clip ca reper",`„${titleOf(top)}” are ${fmt(views(top))} vizualizări. Analizează subiectul și primele secunde, apoi testează o variantă nouă.`]
+  ];
+  if(best)items.push(["✦","Testează formatul cu engagement ridicat",`„${titleOf(best)}” are engagement estimat de ${pct(rate(best))}. Încearcă un hook asemănător pe un subiect diferit.`]);
+  if(as!==null&&al!==null)items.push(["◷","Compară clipurile scurte cu cele lungi",`Clipurile de până la 30 secunde au engagement mediu de ${pct(as)}, iar cele de peste 60 secunde ${pct(al)}. Testează ambele formate.`]);
+  else items.push(["◎","Testează două variante de hook","Publică două clipuri pe subiecte similare, cu începuturi diferite în primele 1–3 secunde. Compară rezultatele după aceeași perioadă."]);
+  items.forEach(([ic,t,d])=>{const row=document.createElement("div");row.className="insight";const i=document.createElement("div");i.className="insighticon";i.textContent=ic;const b=document.createElement("div");const h=document.createElement("div");h.className="insighttitle";h.textContent=t;const p=document.createElement("div");p.className="insighttext";p.textContent=d;b.append(h,p);row.append(i,b);box.append(row)});
+}
+async function loadVideos(showStatus=true){
+  const d=await req("/stored-videos");videos=d.videos||[];
+  renderStats();renderVideos();renderChart();renderInsights();
+  if(showStatus)status(`Date încărcate: ${fmt(videos.length)} videoclipuri din Supabase.`,"success");
+}
+async function loadGrowth(){
+  const box=$("growth");
+  try{
+    const d=await req("/video-growth");
+    const list=(d.top_by_view_growth||[]).filter(v=>num(v.views_gained)>0).slice(0,6);
+    box.replaceChildren();
+    if(!list.length){box.innerHTML='<div class="empty">Nu există creșteri detectabile între ultimele două sincronizări. Încearcă din nou peste câteva ore.</div>';return}
+    list.forEach(v=>{
+      const item=document.createElement("div");item.className="growthitem";
+      const top=document.createElement("div");top.className="growthtop";
+      const name=document.createElement("div");name.className="growthtitle";
+      const match=videos.find(x=>String(x.video_id)===String(v.video_id));
+      name.textContent=match?titleOf(match):"Videoclip "+String(v.video_id).slice(0,10)+"…";
+      const n=document.createElement("div");n.className="growthnum";n.textContent="+"+fmt(v.views_gained)+" viz.";
+      top.append(name,n);
+      const detail=document.createElement("div");detail.className="growthdetail";
+      detail.textContent="+"+fmt(v.likes_gained)+" aprecieri · +"+fmt(v.comments_gained)+" comentarii · +"+fmt(v.shares_gained)+" distribuiri";
+      item.append(top,detail);box.append(item);
+    });
+  }catch(e){box.innerHTML='<div class="empty">Istoricul nu a putut fi încărcat. Încearcă din nou.</div>'}
+}
+function renderAnalysis(d){
+  const box=$("topEngagement"),list=(d.videos||[]).filter(v=>v.engagement_rate!=null).sort((a,b)=>num(b.engagement_rate)-num(a.engagement_rate)).slice(0,5);
+  box.replaceChildren();
+  if(!list.length){box.innerHTML='<div class="empty">Nu există date suficiente pentru clasament.</div>';return}
+  const max=Math.max(...list.map(v=>num(v.engagement_rate)),.01);
+  list.forEach((v,i)=>{
+    const row=document.createElement("div");row.className="rank";
+    const no=document.createElement("div");no.className="rankno";no.textContent=String(i+1).padStart(2,"0");
+    const main=document.createElement("div");
+    const name=document.createElement("div");name.className="ranktitle";
+    const match=videos.find(x=>String(x.video_id)===String(v.video_id));
+    name.textContent=v.title||(match?titleOf(match):"Videoclip TikTok");
+    const detail=document.createElement("div");detail.className="rankdetail";detail.textContent=fmt(v.views)+" vizualizări";
+    const track=document.createElement("div");track.className="track";
+    const bar=document.createElement("div");bar.className="bar";bar.style.width=Math.min(100,num(v.engagement_rate)/max*100)+"%";
+    track.append(bar);main.append(name,detail,track);
+    const val=document.createElement("div");val.className="rankval";val.textContent=pct(v.engagement_rate);
+    row.append(no,main,val);box.append(row);
+  });
+  status(`Analiză finalizată pentru ${fmt(d.analyzed||d.videos.length)} videoclipuri. Engagement mediu per videoclip: ${pct(d.average_engagement_rate)}.`,"success");
+}
+$("sync").addEventListener("click",async()=>{
+  if(busy)return;busyState(true);status("Se sincronizează videoclipurile TikTok și se salvează istoricul…");
+  try{const d=await req("/sync-videos");await loadVideos(false);await loadGrowth();status(`Sincronizare reușită: ${fmt(d.synced)} înregistrări procesate în ${fmt(d.pages)} pagini.`,"success")}
+  catch(e){status(e.message+" Dacă TikTok cere reconectare, apasă «Conectează TikTok».","error")}
+  finally{busyState(false)}
+});
+$("analyze").addEventListener("click",async()=>{
+  if(busy)return;busyState(true);status("Se analizează engagementul videoclipurilor…");
+  try{renderAnalysis(await req("/analyze-videos"))}
+  catch(e){status("Analiza nu a reușit: "+e.message,"error")}
+  finally{busyState(false)}
+});
+$("refreshGrowth").addEventListener("click",async()=>{
+  if(busy)return;busyState(true);
+  try{await loadGrowth();status("Istoricul creșterii a fost actualizat.","success")}
+  catch(e){status("Nu am putut actualiza istoricul: "+e.message,"error")}
+  finally{busyState(false)}
+});
+$("search").addEventListener("input",renderVideos);
+$("sort").addEventListener("change",renderVideos);
 (async()=>{try{await loadVideos();await loadGrowth()}catch(e){status("Nu am putut încărca dashboardul: "+e.message+". Verifică backendul Render.","error")}})();
 </script>
 </body>
