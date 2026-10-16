@@ -22,13 +22,71 @@ const CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
 const REDIRECT_URI = process.env.TIKTOK_REDIRECT_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
+
+const TOKEN_ENCRYPTION_KEY = process.env.TOKEN_ENCRYPTION_KEY;
+
+function encryptToken(value) {
+  if (!TOKEN_ENCRYPTION_KEY || !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)) {
+    throw new Error("TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters.");
+  }
+
+  const key = Buffer.from(TOKEN_ENCRYPTION_KEY, "hex");
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+
+  const encrypted = Buffer.concat([
+    cipher.update(value, "utf8"),
+    cipher.final()
+  ]);
+
+  const tag = cipher.getAuthTag();
+
+  return [
+    iv.toString("hex"),
+    tag.toString("hex"),
+    encrypted.toString("hex")
+  ].join(":");
+}
+
+function decryptToken(value) {
+  if (!TOKEN_ENCRYPTION_KEY || !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)) {
+    throw new Error("TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters.");
+  }
+
+  const parts = value.split(":");
+  if (parts.length !== 3) {
+    throw new Error("Invalid encrypted token format.");
+  }
+
+  const [ivHex, tagHex, encryptedHex] = parts;
+  const key = Buffer.from(TOKEN_ENCRYPTION_KEY, "hex");
+  const iv = Buffer.from(ivHex, "hex");
+  const tag = Buffer.from(tagHex, "hex");
+  const encrypted = Buffer.from(encryptedHex, "hex");
+
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+
+  return Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final()
+  ]).toString("utf8");
+}
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 const supabase =
   SUPABASE_URL && SUPABASE_SECRET_KEY
-    ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY)
+    ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      })
     : null;
+
 const pendingStates = new Map();
 
 // Temporary single-user testing only.
