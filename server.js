@@ -1167,7 +1167,7 @@ app.post("/ai-content-strategist", async (req, res) => {
         followers_per_1000_views: 0.379
       }
     ];
-<CodeBlock language="javascript" editable>
+
 const systemPrompt = `
 Ești Football AI Strategist, un strateg editorial specializat în creșterea unui cont TikTok de fotbal din România.
 OBIECTIV
