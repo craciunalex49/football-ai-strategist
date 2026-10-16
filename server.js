@@ -410,54 +410,6 @@ app.get("/videos", async (req, res) => {
   }
 });
 
-  try {
-    const fields = [
-      "id",
-      "create_time",
-      "cover_image_url",
-      "share_url",
-      "video_description",
-      "duration",
-      "title",
-      "like_count",
-      "comment_count",
-      "share_count",
-      "view_count"
-    ].join(",");
-
-    const response = await fetch(
-      `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${currentToken.access_token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ max_count: 20 })
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok || result.error?.code !== "ok") {
-      console.error("TikTok video list failed:", result.error);
-      return res.status(502).json({
-        error: "TikTok could not return the video list.",
-        details: result.error || null
-      });
-    }
-
-    res.json({
-      count: result.data?.videos?.length || 0,
-      videos: result.data?.videos || [],
-      has_more: result.data?.has_more || false,
-      cursor: result.data?.cursor || null
-    });
-  } catch (err) {
-    console.error("Video request failed:", err.message);
-    res.status(500).json({ error: "Could not load TikTok videos." });
-  }
-});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
