@@ -815,6 +815,116 @@ app.get("/analyze-videos", async (req, res) => {
   }
 });
 
+app.get("/video-growth", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        error: "Supabase is not configured."
+      });
+    }
+
+    // Read the complete history in pages.
+    let history = [];
+    let start = 0;
+    const pageSize = 1000;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from("video_stats_history")
+        .select(
+          "video_id, recorded_at, view_count, like_count, comment_count, share_count"
+        )
+        .order("video_id", { ascending: true })
+        .order("recorded_at", { ascending: false })
+        .range(start, start + pageSize - 1);
+
+      if (error) {
+        console.error("Could not load stats history:", error.code);
+
+        return res.status(500).json({
+          error: "Could not load video statistics history."
+        });
+      }
+
+      history = history.concat(data || []);
+
+      if (!data || data.length < pageSize) {
+        break;
+      }
+
+      start += pageSize;
+    }
+
+    const latestTwo = new Map();
+
+    for (const snapshot of history) {
+      if (!latestTwo.has(snapshot.video_id)) {
+        latestTwo.set(snapshot.video_id, []);
+      }
+
+      const snapshots = latestTwo.get(snapshot.video_id);
+
+      if (snapshots.length < 2) {
+        snapshots.push(snapshot);
+      }
+    }
+
+    const growth = [];
+
+    for (const [videoId, snapshots] of latestTwo.entries()) {
+      if (snapshots.length < 2) continue;
+
+      const latest = snapshots[0];
+      const previous = snapshots[1];
+
+      const viewsGained =
+        Number(latest.view_count) - Number(previous.view_count);
+      const likesGained =
+        Number(latest.like_count) - Number(previous.like_count);
+      const commentsGained =
+        Number(latest.comment_count) - Number(previous.comment_count);
+      const sharesGained =
+        Number(latest.share_count) - Number(previous.share_count);
+
+      const interactionsGained =
+        likesGained + commentsGained + sharesGained;
+
+      growth.push({
+        video_id: videoId,
+        latest_snapshot: latest.recorded_at,
+        previous_snapshot: previous.recorded_at,
+        views: Number(latest.view_count),
+        views_gained: viewsGained,
+        likes_gained: likesGained,
+        comments_gained: commentsGained,
+        shares_gained: sharesGained,
+        interactions_gained: interactionsGained,
+        engagement_rate_between_snapshots:
+          viewsGained > 0
+            ? Number(
+                ((interactionsGained / viewsGained) * 100).toFixed(4)
+              )
+            : null
+      });
+    }
+
+    growth.sort((a, b) => b.views_gained - a.views_gained);
+
+    return res.json({
+      success: true,
+      videos_compared: growth.length,
+      note: "Growth is measured between the two latest saved snapshots. Negative changes can occur if TikTok revises statistics.",
+      top_by_view_growth: growth.slice(0, 50)
+    });
+  } catch (err) {
+    console.error("Video growth analysis failed:", err.message);
+
+    return res.status(500).json({
+      error: "Video growth analysis failed."
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
 });
