@@ -13,26 +13,27 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 
 const pendingStates = new Map();
 
-// Temporary storage for testing only.
+// Temporary single-user testing only.
 // Tokens are lost when the service restarts.
-const temporaryTokens = new Map();
+let currentToken = null;
 
 app.get("/", (req, res) => {
-  res.send("Football AI Strategist backend is running.");
+  res.send(`
+    <h1>Football AI Strategist</h1>
+    <p>Backend is running.</p>
+    <a href="/oauth">Connect with TikTok</a>
+    <br><br>
+    <a href="/videos">View authorized TikTok videos</a>
+  `);
 });
 
 app.get("/health", (req, res) => {
-  res.json({
-    service: "Football AI Strategist",
-    status: "running"
-  });
+  res.json({ service: "Football AI Strategist", status: "running" });
 });
 
 app.get("/oauth", (req, res) => {
   if (!CLIENT_KEY || !REDIRECT_URI || !SESSION_SECRET) {
-    return res.status(500).send(
-      "Server configuration is incomplete."
-    );
+    return res.status(500).send("Server configuration is incomplete.");
   }
 
   const state = crypto.randomBytes(32).toString("hex");
@@ -43,7 +44,6 @@ app.get("/oauth", (req, res) => {
 
   pendingStates.set(state, Date.now());
 
-  // Remove expired states.
   for (const [key, createdAt] of pendingStates) {
     if (Date.now() - createdAt > 10 * 60 * 1000) {
       pendingStates.delete(key);
@@ -73,6 +73,10 @@ app.get("/auth/callback", async (req, res) => {
     return res.status(400).send("Missing authorization response.");
   }
 
+  if (!SESSION_SECRET || !CLIENT_SECRET || !CLIENT_KEY || !REDIRECT_URI) {
+    return res.status(500).send("Server configuration is incomplete.");
+  }
+
   const separator = state.lastIndexOf(".");
   if (separator < 1) {
     return res.status(400).send("Invalid state.");
@@ -84,7 +88,7 @@ app.get("/auth/callback", async (req, res) => {
 
   if (!createdAt || Date.now() - createdAt > 10 * 60 * 1000) {
     pendingStates.delete(stateValue);
-    return res.status(400).send("State expired or not found. Try again.");
+    return res.status(400).send("State expired. Please try again.");
   }
 
   const expectedSignature = crypto
@@ -92,22 +96,18 @@ app.get("/auth/callback", async (req, res) => {
     .update(stateValue)
     .digest("hex");
 
+  const supplied = Buffer.from(suppliedSignature);
+  const expected = Buffer.from(expectedSignature);
+
   if (
-    suppliedSignature.length !== expectedSignature.length ||
-    !crypto.timingSafeEqual(
-      Buffer.from(suppliedSignature),
-      Buffer.from(expectedSignature)
-    )
+    supplied.length !== expected.length ||
+    !crypto.timingSafeEqual(supplied, expected)
   ) {
     pendingStates.delete(stateValue);
     return res.status(400).send("State validation failed.");
   }
 
   pendingStates.delete(stateValue);
-
-  if (!CLIENT_SECRET || !REDIRECT_URI) {
-    return res.status(500).send("Server configuration is incomplete.");
-  }
 
   try {
     const body = new URLSearchParams({
@@ -118,7 +118,7 @@ app.get("/auth/callback", async (req, res) => {
       redirect_uri: REDIRECT_URI
     });
 
-    const tokenResponse = await fetch(
+    const response = await fetch(
       "https://open.tiktokapis.com/v2/oauth/token/",
       {
         method: "POST",
@@ -129,33 +129,97 @@ app.get("/auth/callback", async (req, res) => {
       }
     );
 
-    const result = await tokenResponse.json();
+    const result = await response.json();
 
-    if (!tokenResponse.ok || result.error) {
+    if (!response.ok || result.error || !result.access_token) {
       console.error("TikTok token exchange failed:", result.error);
       return res.status(400).send(
-        "TikTok token exchange failed. Check server logs."
+        "TikTok token exchange failed. Check Render logs."
       );
     }
 
-    // Temporary testing storage; not persistent.
-    temporaryTokens.set(result.open_id, {
+    currentToken = {
       access_token: result.access_token,
       refresh_token: result.refresh_token,
       expires_at: Date.now() + result.expires_in * 1000,
+      open_id: result.open_id,
       scope: result.scope
-    });
+    };
 
-    res.send(
-      "TikTok authorization succeeded. " +
-      "Tokens are held temporarily for testing only."
-    );
+    res.send(`
+      <h1>TikTok connected successfully!</h1>
+      <p>Temporary test session created.</p>
+      <p><a href="/videos">Load your TikTok videos</a></p>
+    `);
   } catch (err) {
     console.error("OAuth callback failed:", err.message);
-    res.status(500).send("Authorization could not be completed.");
+    res.status(500).send("Authorization failed. Check Render logs.");
+  }
+});
+
+app.get("/videos", async (req, res) => {
+  if (!currentToken) {
+    return res.status(401).send(
+      'TikTok is not connected. <a href="/oauth">Connect with TikTok</a>'
+    );
+  }
+
+  if (Date.now() >= currentToken.expires_at) {
+    return res.status(401).send(
+      'Access token expired. <a href="/oauth">Reconnect with TikTok</a>'
+    );
+  }
+
+  try {
+    const fields = [
+      "id",
+      "create_time",
+      "cover_image_url",
+      "share_url",
+      "video_description",
+      "duration",
+      "title",
+      "like_count",
+      "comment_count",
+      "share_count",
+      "view_count"
+    ].join(",");
+
+    const response = await fetch(
+      `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${currentToken.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ max_count: 20 })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || result.error?.code !== "ok") {
+      console.error("TikTok video list failed:", result.error);
+      return res.status(502).json({
+        error: "TikTok could not return the video list.",
+        details: result.error || null
+      });
+    }
+
+    res.json({
+      count: result.data?.videos?.length || 0,
+      videos: result.data?.videos || [],
+      has_more: result.data?.has_more || false,
+      cursor: result.data?.cursor || null
+    });
+  } catch (err) {
+    console.error("Video request failed:", err.message);
+    res.status(500).json({ error: "Could not load TikTok videos." });
   }
 });
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
 });
+
