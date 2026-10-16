@@ -439,12 +439,15 @@ app.get("/videos", async (req, res) => {
       );
     }
 
-    if (Date.now() >= currentToken.expires_at) {
-      return res.status(401).send(
-        'Access token expired. <a href="/oauth">Reconnect with TikTok</a>'
-      );
-    }
+    try {
+  await refreshTikTokToken();
+} catch (err) {
+  console.error("TikTok connection refresh failed:", err.message);
 
+  return res.status(401).send(
+    'TikTok connection needs attention. <a href="/oauth">Reconnect with TikTok</a>'
+  );
+}
     const fields = [
       "id",
       "create_time",
