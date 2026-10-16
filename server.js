@@ -1242,7 +1242,7 @@ Pentru fiecare idee, include hook, scenariu, titlu, hashtaguri, justificare, sco
 
    
     const geminiModel =
-      process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
     const prompt = `
 Analizează datele următoare și generează exact 5 idei distincte.
