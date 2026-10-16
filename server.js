@@ -497,7 +497,101 @@ app.get("/videos", async (req, res) => {
     });
   }
 });
+app.get("/sync-videos", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        error: "Supabase is not configured."
+      });
+    }
 
+    await refreshTikTokToken();
+
+    const fields = [
+      "id",
+      "create_time",
+      "cover_image_url",
+      "share_url",
+      "video_description",
+      "duration",
+      "title",
+      "like_count",
+      "comment_count",
+      "share_count",
+      "view_count"
+    ].join(",");
+
+    const response = await fetch(
+      `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${currentToken.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ max_count: 20 })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || result.error?.code !== "ok") {
+      console.error("TikTok sync failed:", result.error);
+
+      return res.status(502).json({
+        error: "Could not retrieve TikTok videos.",
+        details: result.error || null
+      });
+    }
+
+    const videos = result.data?.videos || [];
+
+    const rows = videos.map((video) => ({
+      video_id: video.id,
+      create_time: video.create_time
+        ? new Date(video.create_time * 1000).toISOString()
+        : null,
+      description: video.video_description || null,
+      title: video.title || null,
+      duration: video.duration ?? null,
+      share_url: video.share_url || null,
+      cover_image_url: video.cover_image_url || null,
+      view_count: video.view_count ?? 0,
+      like_count: video.like_count ?? 0,
+      comment_count: video.comment_count ?? 0,
+      share_count: video.share_count ?? 0,
+      imported_at: new Date().toISOString()
+    }));
+
+    if (rows.length > 0) {
+      const { error } = await supabase
+        .from("tiktok_videos")
+        .upsert(rows, { onConflict: "video_id" });
+
+      if (error) {
+        console.error("Supabase video sync failed:", error.code);
+
+        return res.status(500).json({
+          error: "Could not save videos to Supabase.",
+          code: error.code
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      synced: rows.length,
+      has_more: result.data?.has_more || false,
+      message: "TikTok videos saved to Supabase."
+    });
+  } catch (err) {
+    console.error("Video sync failed:", err.message);
+
+    return res.status(500).json({
+      error: "Video synchronization failed."
+    });
+  }
+});
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
