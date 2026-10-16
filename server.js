@@ -593,6 +593,150 @@ app.get("/sync-videos", async (req, res) => {
   }
 });
 
+app.get("/analyze-videos", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        error: "Supabase is not configured."
+      });
+    }
+
+    const { data: videos, error: videosError } = await supabase
+      .from("tiktok_videos")
+      .select(
+        "video_id, title, description, view_count, like_count, comment_count, share_count"
+      );
+
+    if (videosError) {
+      console.error("Could not load videos for analysis:", videosError.code);
+
+      return res.status(500).json({
+        error: "Could not load videos from Supabase."
+      });
+    }
+
+    if (!videos || videos.length === 0) {
+      return res.json({
+        success: true,
+        analyzed: 0,
+        message: "No videos found. Sync videos first."
+      });
+    }
+
+    const analyzedVideos = videos.map((video) => {
+      const views = Number(video.view_count) || 0;
+      const likes = Number(video.like_count) || 0;
+      const comments = Number(video.comment_count) || 0;
+      const shares = Number(video.share_count) || 0;
+      const interactions = likes + comments + shares;
+
+      const engagementRate =
+        views > 0 ? (interactions / views) * 100 : null;
+
+      return {
+        video_id: video.video_id,
+        title: video.title || null,
+        description: video.description || null,
+        views,
+        likes,
+        comments,
+        shares,
+        interactions,
+        engagement_rate: engagementRate
+      };
+    });
+
+    const validRates = analyzedVideos
+      .map((video) => video.engagement_rate)
+      .filter((rate) => rate !== null);
+
+    const averageRate =
+      validRates.length > 0
+        ? validRates.reduce((sum, rate) => sum + rate, 0) /
+          validRates.length
+        : null;
+
+    const rows = analyzedVideos.map((video) => {
+      let performance = "insufficient_data";
+
+      if (video.engagement_rate !== null && averageRate !== null) {
+        if (video.engagement_rate > averageRate) {
+          performance = "above_average";
+        } else if (video.engagement_rate < averageRate) {
+          performance = "below_average";
+        } else {
+          performance = "average";
+        }
+      }
+
+      return {
+        video_id: video.video_id,
+        engagement_rate:
+          video.engagement_rate === null
+            ? null
+            : Number(video.engagement_rate.toFixed(4)),
+        analysis: {
+          title: video.title,
+          description: video.description,
+          views: video.views,
+          likes: video.likes,
+          comments: video.comments,
+          shares: video.shares,
+          total_interactions: video.interactions,
+          performance,
+          dataset_average_engagement_rate:
+            averageRate === null
+              ? null
+              : Number(averageRate.toFixed(4)),
+          note:
+            "Performance is compared with the average engagement rate of the currently imported videos. It is not a causal assessment."
+        },
+        analyzed_at: new Date().toISOString()
+      };
+    });
+
+    const { error: saveError } = await supabase
+      .from("video_analytics")
+      .upsert(rows, { onConflict: "video_id" });
+
+    if (saveError) {
+      console.error("Could not save video analysis:", saveError.code);
+
+      return res.status(500).json({
+        error: "Could not save video analysis.",
+        code: saveError.code
+      });
+    }
+
+    return res.json({
+      success: true,
+      analyzed: rows.length,
+      average_engagement_rate:
+        averageRate === null ? null : Number(averageRate.toFixed(4)),
+      videos: analyzedVideos
+        .sort(
+          (a, b) =>
+            (b.engagement_rate ?? -1) - (a.engagement_rate ?? -1)
+        )
+        .map((video) => ({
+          video_id: video.video_id,
+          title: video.title,
+          views: video.views,
+          engagement_rate:
+            video.engagement_rate === null
+              ? null
+              : Number(video.engagement_rate.toFixed(4))
+        }))
+    });
+  } catch (err) {
+    console.error("Video analysis failed:", err.message);
+
+    return res.status(500).json({
+      error: "Video analysis failed."
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
 });
