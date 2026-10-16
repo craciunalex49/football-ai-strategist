@@ -1,34 +1,334 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Football AI Strategist</title>
-  <meta name="description" content="Football AI Strategist helps football content creators understand performance analytics and improve their content strategy.">
+  <title>Football AI Strategist | Dashboard</title>
+  <meta name="description" content="Analizează performanța videoclipurilor tale de fotbal pe TikTok.">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 60px auto;
-      padding: 0 24px;
-      line-height: 1.7;
-      color: #202938;
-      background: #f7f9fc;
+    :root {
+      font-family: Inter, Arial, sans-serif;
+      color: #172033;
+      background: #f5f7fb;
     }
-    h1 { color: #123b70; }
-    a { color: #075dcc; }
-    nav { margin-top: 28px; }
-    nav a { margin-right: 18px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e6eaf0;
+      padding: 20px max(20px, calc((100% - 1180px) / 2));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand { font-size: 19px; font-weight: 800; }
+    .brand span { color: #2563eb; }
+    main { max-width: 1180px; margin: 32px auto; padding: 0 20px 48px; }
+    h1 { font-size: clamp(27px, 4vw, 38px); margin: 0 0 8px; }
+    .muted { color: #697386; }
+    .top { display: flex; justify-content: space-between; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
+    button, .btn {
+      display: inline-block; border: 0; border-radius: 10px;
+      padding: 12px 17px; background: #2563eb; color: white;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+    button.secondary { background: #e9eef8; color: #1f2937; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat, .panel, .video {
+      background: white; border: 1px solid #e7ebf2; border-radius: 16px;
+      box-shadow: 0 4px 18px #17203308;
+    }
+    .stat { padding: 20px; }
+    .stat-label { color: #697386; font-size: 14px; }
+    .stat-value { font-size: clamp(23px, 3vw, 32px); font-weight: 800; margin-top: 9px; overflow-wrap: anywhere; }
+    .panel { padding: 20px; margin-bottom: 24px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+    .toolbar h2 { margin: 0; font-size: 21px; }
+    input, select { padding: 11px 12px; border: 1px solid #dce2ec; border-radius: 9px; background: white; max-width: 100%; }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; }
+    .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .video { overflow: hidden; min-width: 0; }
+    .cover { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #e8edf5; }
+    .video-body { padding: 16px; }
+    .video-title { font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+    .video-meta { font-size: 13px; color: #697386; margin: 9px 0 13px; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .metric { background: #f5f7fb; padding: 10px; border-radius: 9px; }
+    .metric strong { display: block; font-size: 17px; }
+    .metric span { color: #697386; font-size: 12px; }
+    .video-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .video-actions a { font-size: 13px; }
+    .status { padding: 14px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; margin: 18px 0; }
+    .hidden { display: none !important; }
+    footer { color: #697386; text-align: center; font-size: 13px; padding: 25px; }
+    @media (max-width: 850px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .videos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      main { margin-top: 24px; }
+      .videos { grid-template-columns: 1fr; }
+      .stat { padding: 15px; }
+      .panel { padding: 14px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Football AI Strategist</h1>
-  <p>Football AI Strategist is a project focused on helping football content creators understand content performance and improve their social media strategy.</p>
-  <p>This website provides information about the project, its terms of service, and its privacy practices.</p>
-  <nav>
-    <a href="terms-of-service.html">Terms of Service</a>
-    <a href="privacy-policy.html">Privacy Policy</a>
-  </nav>
+  <header>
+    <div class="brand">⚽ Football <span>AI Strategist</span></div>
+    <a class="btn" href="https://football-ai-strategist-api.onrender.com/oauth">
+      Conectează TikTok
+    </a>
+  </header>
+
+  <main>
+    <section class="top">
+      <div>
+        <h1>Content Dashboard</h1>
+        <p class="muted">Înțelege ce funcționează pe contul tău de fotbal.</p>
+      </div>
+      <button id="refresh" class="secondary" type="button">↻ Actualizează datele</button>
+    </section>
+
+    <div id="status" class="status" role="status">
+      Apasă „Încarcă videoclipurile” pentru a prelua datele din TikTok.
+    </div>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="stat-label">Videoclipuri încărcate</div>
+        <div class="stat-value" id="totalVideos">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total vizualizări</div>
+        <div class="stat-value" id="totalViews">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total aprecieri</div>
+        <div class="stat-value" id="totalLikes">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Rată engagement*</div>
+        <div class="stat-value" id="engagement">—</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <h2>Videoclipurile tale</h2>
+        <div class="filters">
+          <input id="search" type="search" placeholder="Caută după titlu…">
+          <select id="sort" aria-label="Sortează videoclipurile">
+            <option value="views">Cele mai vizualizate</option>
+            <option value="likes">Cele mai apreciate</option>
+            <option value="engagement">Engagement ridicat</option>
+            <option value="recent">Cele mai recente</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="load" type="button">Încarcă videoclipurile</button>
+      <div id="videos" class="videos" style="margin-top:20px"></div>
+      <button id="more" class="secondary hidden" type="button" style="margin-top:20px">
+        Încarcă următoarele 20
+      </button>
+    </section>
+
+    <p class="muted" style="font-size:13px">
+      * Engagement = (aprecieri + comentarii + distribuiri) / vizualizări × 100.
+      Statisticile reflectă videoclipurile încărcate, nu neapărat întregul cont.
+    </p>
+  </main>
+
+  <footer>
+    Football AI Strategist ·
+    <a href="privacy-policy.html">Confidențialitate</a> ·
+    <a href="terms-of-service.html">Termeni</a>
+  </footer>
+
+  <script>
+    const API = "https://football-ai-strategist-api.onrender.com";
+    let videos = [];
+    let cursor = null;
+    let hasMore = false;
+    let loading = false;
+
+    const number = n => Number(n || 0).toLocaleString("ro-RO");
+    const rate = v => {
+      const views = Number(v.view_count || 0);
+      return views ? (
+        (Number(v.like_count || 0) +
+         Number(v.comment_count || 0) +
+         Number(v.share_count || 0)) / views * 100
+      ) : 0;
+    };
+    const titleOf = v => v.title || v.video_description || "Videoclip TikTok";
+    const status = message => {
+      document.getElementById("status").textContent = message;
+    };
+
+    function renderStats() {
+      const views = videos.reduce((s, v) => s + Number(v.view_count || 0), 0);
+      const likes = videos.reduce((s, v) => s + Number(v.like_count || 0), 0);
+      const comments = videos.reduce((s, v) => s + Number(v.comment_count || 0), 0);
+      const shares = videos.reduce((s, v) => s + Number(v.share_count || 0), 0);
+
+      document.getElementById("totalVideos").textContent = number(videos.length);
+      document.getElementById("totalViews").textContent = number(views);
+      document.getElementById("totalLikes").textContent = number(likes);
+
+      const engagement = views ? (likes + comments + shares) / views * 100 : 0;
+      document.getElementById("engagement").textContent =
+        views ? engagement.toLocaleString("ro-RO", { maximumFractionDigits: 2 }) + "%" : "—";
+    }
+
+    function renderVideos() {
+      const query = document.getElementById("search").value.toLowerCase().trim();
+      const sort = document.getElementById("sort").value;
+      let filtered = videos.filter(v => titleOf(v).toLowerCase().includes(query));
+
+      filtered.sort((a, b) => {
+        if (sort === "likes") return Number(b.like_count || 0) - Number(a.like_count || 0);
+        if (sort === "engagement") return rate(b) - rate(a);
+        if (sort === "recent") return Number(b.create_time || 0) - Number(a.create_time || 0);
+        return Number(b.view_count || 0) - Number(a.view_count || 0);
+      });
+
+      const container = document.getElementById("videos");
+      container.replaceChildren();
+
+      if (!filtered.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = videos.length ? "Nu există rezultate pentru căutarea ta." :
+          "Nu sunt videoclipuri afișate încă. Conectează TikTok și încarcă datele.";
+        container.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach(v => {
+        const card = document.createElement("article");
+        card.className = "video";
+
+        const img = document.createElement("img");
+        img.className = "cover";
+        img.alt = "Coperta videoclipului";
+        img.loading = "lazy";
+        if (v.cover_image_url) img.src = v.cover_image_url;
+
+        const body = document.createElement("div");
+        body.className = "video-body";
+
+        const heading = document.createElement("div");
+        heading.className = "video-title";
+        heading.textContent = titleOf(v);
+
+        const meta = document.createElement("div");
+        meta.className = "video-meta";
+        const date = v.create_time
+          ? new Date(Number(v.create_time) * 1000).toLocaleDateString("ro-RO")
+          : "Dată indisponibilă";
+        meta.textContent = `${date} · ${Number(v.duration || 0)} secunde`;
+
+        const metrics = document.createElement("div");
+        metrics.className = "metrics";
+
+        [
+          ["Vizualizări", v.view_count],
+          ["Aprecieri", v.like_count],
+          ["Comentarii", v.comment_count],
+          ["Distribuiri", v.share_count]
+        ].forEach(([label, value]) => {
+          const item = document.createElement("div");
+          item.className = "metric";
+          const strong = document.createElement("strong");
+          strong.textContent = value == null ? "—" : number(value);
+          const span = document.createElement("span");
+          span.textContent = label;
+          item.append(strong, span);
+          metrics.appendChild(item);
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "video-actions";
+
+        if (v.share_url) {
+          const link = document.createElement("a");
+          link.className = "btn";
+          link.href = v.share_url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Vezi pe TikTok";
+          actions.appendChild(link);
+        }
+
+        const rateLabel = document.createElement("p");
+        rateLabel.className = "muted";
+        rateLabel.style.fontSize = "13px";
+        rateLabel.textContent = `Engagement: ${rate(v).toLocaleString("ro-RO", {
+          maximumFractionDigits: 2
+        })}%`;
+
+        body.append(heading, meta, metrics, rateLabel, actions);
+        card.append(img, body);
+        container.appendChild(card);
+      });
+    }
+
+    async function loadVideos(append = false) {
+      if (loading) return;
+      loading = true;
+
+      const loadButton = document.getElementById("load");
+      const refreshButton = document.getElementById("refresh");
+      loadButton.disabled = true;
+      refreshButton.disabled = true;
+      status("Se conectează la backend… Prima cerere poate dura până la 50 de secunde.");
+
+      try {
+        const url = new URL(API + "/videos");
+        if (append && cursor) url.searchParams.set("cursor", cursor);
+
+        const response = await fetch(url);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            status("Sesiunea TikTok nu mai este activă. Apasă „Conectează TikTok” și autorizează din nou.");
+          } else {
+            status(data.error || "Nu am putut încărca datele. Încearcă din nou.");
+          }
+          return;
+        }
+
+        videos = append ? videos.concat(data.videos || []) : (data.videos || []);
+        cursor = data.cursor || null;
+        hasMore = Boolean(data.has_more);
+
+        renderStats();
+        renderVideos();
+
+        document.getElementById("more").classList.toggle("hidden", !hasMore);
+        status(`Date încărcate cu succes: ${videos.length} videoclipuri afișate.`);
+      } catch (err) {
+        status("Nu am putut contacta backendul. Verifică dacă Render a terminat deploy-ul și dacă setările CORS sunt active.");
+      } finally {
+        loading = false;
+        loadButton.disabled = false;
+        refreshButton.disabled = false;
+      }
+    }
+
+    document.getElementById("load").addEventListener("click", () => loadVideos(false));
+    document.getElementById("refresh").addEventListener("click", () => loadVideos(false));
+    document.getElementById("more").addEventListener("click", () => loadVideos(true));
+    document.getElementById("search").addEventListener("input", renderVideos);
+    document.getElementById("sort").addEventListener("change", renderVideos);
+  </script>
 </body>
 </html>
+
