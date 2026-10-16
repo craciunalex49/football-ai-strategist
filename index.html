@@ -1,334 +1,134 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Football AI Strategist | Dashboard</title>
-  <meta name="description" content="Analizează performanța videoclipurilor tale de fotbal pe TikTok.">
-  <style>
-    :root {
-      font-family: Inter, Arial, sans-serif;
-      color: #172033;
-      background: #f5f7fb;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; }
-    header {
-      background: #fff;
-      border-bottom: 1px solid #e6eaf0;
-      padding: 20px max(20px, calc((100% - 1180px) / 2));
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .brand { font-size: 19px; font-weight: 800; }
-    .brand span { color: #2563eb; }
-    main { max-width: 1180px; margin: 32px auto; padding: 0 20px 48px; }
-    h1 { font-size: clamp(27px, 4vw, 38px); margin: 0 0 8px; }
-    .muted { color: #697386; }
-    .top { display: flex; justify-content: space-between; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
-    button, .btn {
-      display: inline-block; border: 0; border-radius: 10px;
-      padding: 12px 17px; background: #2563eb; color: white;
-      font-weight: 700; cursor: pointer; text-decoration: none;
-    }
-    button.secondary { background: #e9eef8; color: #1f2937; }
-    button:disabled { opacity: .6; cursor: wait; }
-    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 28px; }
-    .stat, .panel, .video {
-      background: white; border: 1px solid #e7ebf2; border-radius: 16px;
-      box-shadow: 0 4px 18px #17203308;
-    }
-    .stat { padding: 20px; }
-    .stat-label { color: #697386; font-size: 14px; }
-    .stat-value { font-size: clamp(23px, 3vw, 32px); font-weight: 800; margin-top: 9px; overflow-wrap: anywhere; }
-    .panel { padding: 20px; margin-bottom: 24px; }
-    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-    .toolbar h2 { margin: 0; font-size: 21px; }
-    input, select { padding: 11px 12px; border: 1px solid #dce2ec; border-radius: 9px; background: white; max-width: 100%; }
-    .filters { display: flex; flex-wrap: wrap; gap: 10px; }
-    .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-    .video { overflow: hidden; min-width: 0; }
-    .cover { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #e8edf5; }
-    .video-body { padding: 16px; }
-    .video-title { font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
-    .video-meta { font-size: 13px; color: #697386; margin: 9px 0 13px; }
-    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-    .metric { background: #f5f7fb; padding: 10px; border-radius: 9px; }
-    .metric strong { display: block; font-size: 17px; }
-    .metric span { color: #697386; font-size: 12px; }
-    .video-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .video-actions a { font-size: 13px; }
-    .status { padding: 14px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; margin: 18px 0; }
-    .hidden { display: none !important; }
-    footer { color: #697386; text-align: center; font-size: 13px; padding: 25px; }
-    @media (max-width: 850px) {
-      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .videos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 560px) {
-      main { margin-top: 24px; }
-      .videos { grid-template-columns: 1fr; }
-      .stat { padding: 15px; }
-      .panel { padding: 14px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>Football AI Strategist | Dashboard</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--bg:#07111f;--panel:#0d1a2b;--line:#243a56;--text:#edf5ff;--muted:#91a5bf;--blue:#3684ff;--cyan:#4bd8f2;--green:#40d6a0}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 12% 0,#12376b55,transparent 34rem),var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:11px;padding:11px 15px;background:linear-gradient(135deg,#3684ff,#1e63e9);color:white;font-weight:750;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.55;cursor:wait}
+.secondary{background:#142842!important;border-color:#294463!important;color:#dceaff!important}
+.ghost{background:transparent!important;border-color:var(--line)!important;color:var(--muted)!important}
+a{color:#81b7ff}
+header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;padding:15px max(18px,calc((100% - 1240px)/2));background:#07111fe8;border-bottom:1px solid #1d3048;backdrop-filter:blur(15px)}
+.brandwrap{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#398cff,#1451c8);font-size:21px}
+.brand{font-weight:850}.brand span{color:#6aa8ff}
+.subbrand{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+main{max-width:1240px;margin:auto;padding:30px 20px 50px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:1.7px;font-size:11px;font-weight:850}
+h1{font-size:clamp(28px,4vw,42px);letter-spacing:-1px;margin:8px 0}
+.hero p,.muted{color:var(--muted);line-height:1.55}
+.hero p{margin:0;max-width:680px}
+.actions{display:flex;gap:9px;flex-wrap:wrap}
+.status{padding:13px 15px;border-radius:12px;border:1px solid #294a72;background:#102744;color:#cfe3ff;margin-bottom:20px;font-size:13px;line-height:1.5}
+.status.success{border-color:#1f5b4e;background:#0d2929;color:#c4f9e5}
+.status.error{border-color:#6a3547;background:#301925;color:#ffd7de}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.stat,.panel{background:linear-gradient(145deg,#0f1f33,#0b1727);border:1px solid var(--line);border-radius:17px;min-width:0;box-shadow:0 12px 30px #0002}
+.stat{padding:18px}.label{color:var(--muted);font-size:13px}
+.value{font-size:clamp(24px,3vw,33px);font-weight:850;margin-top:13px;letter-spacing:-.7px;overflow-wrap:anywhere}
+.foot{color:#6f87a5;font-size:11px;margin-top:5px}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr);gap:18px;align-items:start}
+.panel{padding:19px;margin-bottom:18px}
+.panelhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:17px}
+h2{font-size:18px;margin:0}.panelsub{font-size:12px;color:var(--muted);margin-top:6px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+input,select{padding:10px 11px;max-width:100%;min-width:0;border:1px solid #2b405b;border-radius:10px;background:#091626;color:var(--text)}
+input:focus,select:focus{outline:2px solid #3684ff66}
+.videos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.video{overflow:hidden;min-width:0;background:#0a1727;border:1px solid #213650;border-radius:14px}
+.cover{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#14243a}
+.vbody{padding:13px}.vtitle{font-size:14px;font-weight:750;line-height:1.45;overflow-wrap:anywhere}
+.vmeta{font-size:11px;color:var(--muted);margin:7px 0 12px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{background:#102137;padding:9px;border-radius:9px}
+.metric strong{display:block;font-size:15px;overflow-wrap:anywhere}
+.metric span{font-size:11px;color:var(--muted)}
+.rate{display:inline-block;margin-top:11px;font-size:11px;color:#9cebd0;background:#10342f;border:1px solid #1d5148;border-radius:20px;padding:5px 8px}
+.vactions{margin-top:12px}.vactions .btn{font-size:12px;padding:8px 10px}
+.ranklist{display:flex;flex-direction:column;gap:15px}
+.rank{display:grid;grid-template-columns:29px minmax(0,1fr) auto;gap:9px;align-items:center}
+.rankno{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#17345a;color:#9cc8ff;font-size:12px;font-weight:800}
+.ranktitle,.growthtitle{font-size:12px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.rankdetail,.growthdetail{font-size:11px;color:var(--muted);margin-top:4px}
+.rankval{font-size:12px;font-weight:800;white-space:nowrap}
+.track{height:5px;background:#1a2a40;border-radius:20px;margin-top:7px;overflow:hidden}
+.bar{height:100%;background:linear-gradient(90deg,#2563eb,#4bd8f2);border-radius:inherit}
+.growthitem{padding:12px 0;border-bottom:1px solid #1d3047}
+.growthitem:last-child{border:0}
+.growthtop{display:flex;justify-content:space-between;gap:10px}
+.growthnum{color:var(--green);font-size:12px;font-weight:800;white-space:nowrap}
+.empty{color:var(--muted);font-size:13px;padding:18px 0;line-height:1.6}
+.note{color:var(--muted);font-size:11px;line-height:1.6;margin-top:12px}
+footer{border-top:1px solid #1b2b40;color:#6e829c;text-align:center;font-size:12px;padding:24px}
+footer a{margin:0 5px}
+@media(max-width:950px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+@media(max-width:680px){header{padding:12px 14px}main{padding:24px 13px 38px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:13px}.videos{grid-template-columns:1fr}.side{display:block}.panel{padding:14px}.actions{width:100%}.actions button,.actions a{flex:1}}
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand">⚽ Football <span>AI Strategist</span></div>
-    <a class="btn" href="https://football-ai-strategist-api.onrender.com/oauth">
-      Conectează TikTok
-    </a>
-  </header>
-
-  <main>
-    <section class="top">
-      <div>
-        <h1>Content Dashboard</h1>
-        <p class="muted">Înțelege ce funcționează pe contul tău de fotbal.</p>
-      </div>
-      <button id="refresh" class="secondary" type="button">↻ Actualizează datele</button>
-    </section>
-
-    <div id="status" class="status" role="status">
-      Apasă „Încarcă videoclipurile” pentru a prelua datele din TikTok.
-    </div>
-
-    <section class="stats">
-      <div class="stat">
-        <div class="stat-label">Videoclipuri încărcate</div>
-        <div class="stat-value" id="totalVideos">—</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Total vizualizări</div>
-        <div class="stat-value" id="totalViews">—</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Total aprecieri</div>
-        <div class="stat-value" id="totalLikes">—</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Rată engagement*</div>
-        <div class="stat-value" id="engagement">—</div>
-      </div>
-    </section>
-
+<header>
+  <div class="brandwrap">
+    <div class="logo">⚽</div>
+    <div><div class="brand">Football <span>AI Strategist</span></div><div class="subbrand">TikTok performance studio</div></div>
+  </div>
+  <a class="btn secondary" href="https://football-ai-strategist-api.onrender.com/oauth">↗ Conectează TikTok</a>
+</header>
+<main>
+  <section class="hero">
+    <div><div class="eyebrow">Creator analytics</div><h1>Dashboard de performanță</h1><p>Înțelege ce funcționează, identifică videoclipurile cu rezultate bune și urmărește evoluția contului tău de fotbal.</p></div>
+    <div class="actions"><button id="sync">↻ Sincronizează TikTok</button><button id="analyze" class="secondary">✦ Analizează clipurile</button></div>
+  </section>
+  <div id="status" class="status" role="status" aria-live="polite">Se încarcă datele salvate… Prima cerere poate dura până la 50 de secunde.</div>
+  <section class="stats">
+    <div class="stat"><div class="label">Videoclipuri salvate</div><div id="totalVideos" class="value">—</div><div class="foot">Importate în baza de date</div></div>
+    <div class="stat"><div class="label">Total vizualizări</div><div id="totalViews" class="value">—</div><div class="foot">Pentru clipurile sincronizate</div></div>
+    <div class="stat"><div class="label">Total aprecieri</div><div id="totalLikes" class="value">—</div><div class="foot">Like-uri cumulate</div></div>
+    <div class="stat"><div class="label">Engagement mediu</div><div id="engagement" class="value">—</div><div class="foot">Interacțiuni / vizualizări</div></div>
+  </section>
+  <div class="layout">
     <section class="panel">
-      <div class="toolbar">
-        <h2>Videoclipurile tale</h2>
-        <div class="filters">
-          <input id="search" type="search" placeholder="Caută după titlu…">
-          <select id="sort" aria-label="Sortează videoclipurile">
-            <option value="views">Cele mai vizualizate</option>
-            <option value="likes">Cele mai apreciate</option>
-            <option value="engagement">Engagement ridicat</option>
-            <option value="recent">Cele mai recente</option>
-          </select>
-        </div>
+      <div class="panelhead"><div><h2>Biblioteca videoclipurilor</h2><div id="videoSub" class="panelsub">Videoclipuri sincronizate din TikTok</div></div>
+        <div class="filters"><input id="search" type="search" placeholder="Caută un clip…" aria-label="Caută videoclip"><select id="sort" aria-label="Sortează"><option value="views">Cele mai vizualizate</option><option value="likes">Cele mai apreciate</option><option value="engagement">Engagement ridicat</option><option value="recent">Cele mai recente</option></select></div>
       </div>
-
-      <button id="load" type="button">Încarcă videoclipurile</button>
-      <div id="videos" class="videos" style="margin-top:20px"></div>
-      <button id="more" class="secondary hidden" type="button" style="margin-top:20px">
-        Încarcă următoarele 20
-      </button>
+      <div id="videos" class="videos"><p class="empty">Se încarcă videoclipurile…</p></div>
     </section>
-
-    <p class="muted" style="font-size:13px">
-      * Engagement = (aprecieri + comentarii + distribuiri) / vizualizări × 100.
-      Statisticile reflectă videoclipurile încărcate, nu neapărat întregul cont.
-    </p>
-  </main>
-
-  <footer>
-    Football AI Strategist ·
-    <a href="privacy-policy.html">Confidențialitate</a> ·
-    <a href="terms-of-service.html">Termeni</a>
-  </footer>
-
-  <script>
-    const API = "https://football-ai-strategist-api.onrender.com";
-    let videos = [];
-    let cursor = null;
-    let hasMore = false;
-    let loading = false;
-
-    const number = n => Number(n || 0).toLocaleString("ro-RO");
-    const rate = v => {
-      const views = Number(v.view_count || 0);
-      return views ? (
-        (Number(v.like_count || 0) +
-         Number(v.comment_count || 0) +
-         Number(v.share_count || 0)) / views * 100
-      ) : 0;
-    };
-    const titleOf = v => v.title || v.video_description || "Videoclip TikTok";
-    const status = message => {
-      document.getElementById("status").textContent = message;
-    };
-
-    function renderStats() {
-      const views = videos.reduce((s, v) => s + Number(v.view_count || 0), 0);
-      const likes = videos.reduce((s, v) => s + Number(v.like_count || 0), 0);
-      const comments = videos.reduce((s, v) => s + Number(v.comment_count || 0), 0);
-      const shares = videos.reduce((s, v) => s + Number(v.share_count || 0), 0);
-
-      document.getElementById("totalVideos").textContent = number(videos.length);
-      document.getElementById("totalViews").textContent = number(views);
-      document.getElementById("totalLikes").textContent = number(likes);
-
-      const engagement = views ? (likes + comments + shares) / views * 100 : 0;
-      document.getElementById("engagement").textContent =
-        views ? engagement.toLocaleString("ro-RO", { maximumFractionDigits: 2 }) + "%" : "—";
-    }
-
-    function renderVideos() {
-      const query = document.getElementById("search").value.toLowerCase().trim();
-      const sort = document.getElementById("sort").value;
-      let filtered = videos.filter(v => titleOf(v).toLowerCase().includes(query));
-
-      filtered.sort((a, b) => {
-        if (sort === "likes") return Number(b.like_count || 0) - Number(a.like_count || 0);
-        if (sort === "engagement") return rate(b) - rate(a);
-        if (sort === "recent") return Number(b.create_time || 0) - Number(a.create_time || 0);
-        return Number(b.view_count || 0) - Number(a.view_count || 0);
-      });
-
-      const container = document.getElementById("videos");
-      container.replaceChildren();
-
-      if (!filtered.length) {
-        const empty = document.createElement("p");
-        empty.className = "muted";
-        empty.textContent = videos.length ? "Nu există rezultate pentru căutarea ta." :
-          "Nu sunt videoclipuri afișate încă. Conectează TikTok și încarcă datele.";
-        container.appendChild(empty);
-        return;
-      }
-
-      filtered.forEach(v => {
-        const card = document.createElement("article");
-        card.className = "video";
-
-        const img = document.createElement("img");
-        img.className = "cover";
-        img.alt = "Coperta videoclipului";
-        img.loading = "lazy";
-        if (v.cover_image_url) img.src = v.cover_image_url;
-
-        const body = document.createElement("div");
-        body.className = "video-body";
-
-        const heading = document.createElement("div");
-        heading.className = "video-title";
-        heading.textContent = titleOf(v);
-
-        const meta = document.createElement("div");
-        meta.className = "video-meta";
-        const date = v.create_time
-          ? new Date(Number(v.create_time) * 1000).toLocaleDateString("ro-RO")
-          : "Dată indisponibilă";
-        meta.textContent = `${date} · ${Number(v.duration || 0)} secunde`;
-
-        const metrics = document.createElement("div");
-        metrics.className = "metrics";
-
-        [
-          ["Vizualizări", v.view_count],
-          ["Aprecieri", v.like_count],
-          ["Comentarii", v.comment_count],
-          ["Distribuiri", v.share_count]
-        ].forEach(([label, value]) => {
-          const item = document.createElement("div");
-          item.className = "metric";
-          const strong = document.createElement("strong");
-          strong.textContent = value == null ? "—" : number(value);
-          const span = document.createElement("span");
-          span.textContent = label;
-          item.append(strong, span);
-          metrics.appendChild(item);
-        });
-
-        const actions = document.createElement("div");
-        actions.className = "video-actions";
-
-        if (v.share_url) {
-          const link = document.createElement("a");
-          link.className = "btn";
-          link.href = v.share_url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.textContent = "Vezi pe TikTok";
-          actions.appendChild(link);
-        }
-
-        const rateLabel = document.createElement("p");
-        rateLabel.className = "muted";
-        rateLabel.style.fontSize = "13px";
-        rateLabel.textContent = `Engagement: ${rate(v).toLocaleString("ro-RO", {
-          maximumFractionDigits: 2
-        })}%`;
-
-        body.append(heading, meta, metrics, rateLabel, actions);
-        card.append(img, body);
-        container.appendChild(card);
-      });
-    }
-
-    async function loadVideos(append = false) {
-      if (loading) return;
-      loading = true;
-
-      const loadButton = document.getElementById("load");
-      const refreshButton = document.getElementById("refresh");
-      loadButton.disabled = true;
-      refreshButton.disabled = true;
-      status("Se conectează la backend… Prima cerere poate dura până la 50 de secunde.");
-
-      try {
-        const url = new URL(API + "/videos");
-        if (append && cursor) url.searchParams.set("cursor", cursor);
-
-        const response = await fetch(url);
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            status("Sesiunea TikTok nu mai este activă. Apasă „Conectează TikTok” și autorizează din nou.");
-          } else {
-            status(data.error || "Nu am putut încărca datele. Încearcă din nou.");
-          }
-          return;
-        }
-
-        videos = append ? videos.concat(data.videos || []) : (data.videos || []);
-        cursor = data.cursor || null;
-        hasMore = Boolean(data.has_more);
-
-        renderStats();
-        renderVideos();
-
-        document.getElementById("more").classList.toggle("hidden", !hasMore);
-        status(`Date încărcate cu succes: ${videos.length} videoclipuri afișate.`);
-      } catch (err) {
-        status("Nu am putut contacta backendul. Verifică dacă Render a terminat deploy-ul și dacă setările CORS sunt active.");
-      } finally {
-        loading = false;
-        loadButton.disabled = false;
-        refreshButton.disabled = false;
-      }
-    }
-
-    document.getElementById("load").addEventListener("click", () => loadVideos(false));
-    document.getElementById("refresh").addEventListener("click", () => loadVideos(false));
-    document.getElementById("more").addEventListener("click", () => loadVideos(true));
-    document.getElementById("search").addEventListener("input", renderVideos);
-    document.getElementById("sort").addEventListener("change", renderVideos);
-  </script>
+    <aside class="side">
+      <section class="panel"><div class="panelhead"><div><h2>Top engagement</h2><div class="panelsub">Cele mai bune rate de interacțiune</div></div></div><div id="topEngagement" class="ranklist"><div class="empty">Apasă „Analizează clipurile” pentru clasament.</div></div><div class="note">Clasamentul compară ratele de engagement ale videoclipurilor analizate.</div></section>
+      <section class="panel"><div class="panelhead"><div><h2>Creștere recentă</h2><div class="panelsub">Diferența dintre ultimele două sincronizări</div></div><button id="refreshGrowth" class="ghost" aria-label="Actualizează creșterea">↻</button></div><div id="growth"><div class="empty">Se încarcă istoricul…</div></div><div class="note">Sincronizează din nou după câteva ore sau a doua zi pentru o comparație mai utilă.</div></section>
+    </aside>
+  </div>
+  <p class="note">Engagement = (aprecieri + comentarii + distribuiri) ÷ vizualizări × 100. Statisticile reflectă ultima sincronizare disponibilă.</p>
+</main>
+<footer>Football AI Strategist · <a href="privacy-policy.html">Confidențialitate</a> · <a href="terms-of-service.html">Termeni</a></footer>
+<script>
+const API="https://football-ai-strategist-api.onrender.com";let videos=[],busy=false;
+const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString("ro-RO"),pct=n=>n==null||!Number.isFinite(Number(n))?"—":Number(n).toLocaleString("ro-RO",{maximumFractionDigits:2})+"%";
+const titleOf=v=>v.title||v.description||v.video_description||"Videoclip TikTok";
+const views=v=>Number(v.view_count??v.views??0),likes=v=>Number(v.like_count??v.likes??0),comments=v=>Number(v.comment_count??v.comments??0),shares=v=>Number(v.share_count??v.shares??0);
+const rate=v=>views(v)>0?(likes(v)+comments(v)+shares(v))/views(v)*100:null;
+function status(msg,type=""){$("status").className="status"+(type?" "+type:"");$("status").textContent=msg}
+async function req(path){const r=await fetch(API+path);const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||d.message||`Cerere eșuată (${r.status})`);return d}
+function busyState(v){busy=v;["sync","analyze","refreshGrowth"].forEach(id=>$(id).disabled=v)}
+function dateOf(v){if(!v.create_time)return"Dată indisponibilă";const d=typeof v.create_time==="number"||/^\d+$/.test(String(v.create_time))?new Date(Number(v.create_time)*1000):new Date(v.create_time);return isNaN(d)?"Dată indisponibilă":d.toLocaleDateString("ro-RO")}
+function renderStats(){let v=videos.reduce((s,x)=>s+views(x),0),l=videos.reduce((s,x)=>s+likes(x),0),c=videos.reduce((s,x)=>s+comments(x),0),sh=videos.reduce((s,x)=>s+shares(x),0);$("totalVideos").textContent=fmt(videos.length);$("totalViews").textContent=fmt(v);$("totalLikes").textContent=fmt(l);$("engagement").textContent=v?pct((l+c+sh)/v*100):"—";$("videoSub").textContent=fmt(videos.length)+" videoclipuri salvate în baza de date"}
+function renderVideos(){let q=$("search").value.toLowerCase().trim(),s=$("sort").value,a=videos.filter(v=>titleOf(v).toLowerCase().includes(q));a.sort((x,y)=>s==="likes"?likes(y)-likes(x):s==="engagement"?(rate(y)??-1)-(rate(x)??-1):s==="recent"?new Date(y.create_time||0)-new Date(x.create_time||0):views(y)-views(x));let box=$("videos");box.replaceChildren();if(!a.length){let p=document.createElement("p");p.className="empty";p.textContent=videos.length?"Nu există rezultate pentru căutare.":"Nu există clipuri salvate. Apasă «Sincronizează TikTok».";box.append(p);return}a.forEach(v=>{let card=document.createElement("article");card.className="video";let img=document.createElement("img");img.className="cover";img.alt="Coperta videoclipului";img.loading="lazy";if(v.cover_image_url)img.src=v.cover_image_url;img.onerror=()=>img.style.display="none";let body=document.createElement("div");body.className="vbody";let h=document.createElement("div");h.className="vtitle";h.textContent=titleOf(v);let meta=document.createElement("div");meta.className="vmeta";meta.textContent=dateOf(v)+" · "+Number(v.duration||0)+" sec";let ms=document.createElement("div");ms.className="metrics";[["Vizualizări",views(v)],["Aprecieri",likes(v)],["Comentarii",comments(v)],["Distribuiri",shares(v)]].forEach(([t,n])=>{let m=document.createElement("div");m.className="metric";let b=document.createElement("strong");b.textContent=fmt(n);let sp=document.createElement("span");sp.textContent=t;m.append(b,sp);ms.append(m)});let r=document.createElement("span");r.className="rate";r.textContent="Engagement "+pct(rate(v));body.append(h,meta,ms,r);if(v.share_url){let act=document.createElement("div");act.className="vactions";let link=document.createElement("a");link.className="btn secondary";link.href=v.share_url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Vezi pe TikTok ↗";act.append(link);body.append(act)}card.append(img,body);box.append(card)})}
+async function loadVideos(show=true){let d=await req("/stored-videos");videos=d.videos||[];renderStats();renderVideos();if(show)status(`Date încărcate: ${fmt(videos.length)} videoclipuri din Supabase.`,"success")}
+async function loadGrowth(){let box=$("growth");try{let d=await req("/video-growth"),list=(d.top_by_view_growth||[]).filter(x=>Number(x.views_gained)>0).slice(0,6);box.replaceChildren();if(!list.length){box.innerHTML='<div class="empty">Nu există încă o creștere a vizualizărilor între ultimele două sincronizări. Încearcă din nou peste câteva ore.</div>';return}list.forEach(v=>{let item=document.createElement("div");item.className="growthitem";let top=document.createElement("div");top.className="growthtop";let name=document.createElement("div");name.className="growthtitle";let match=videos.find(x=>String(x.video_id)===String(v.video_id));name.textContent=match?titleOf(match):"Videoclip "+String(v.video_id).slice(0,10)+"…";let n=document.createElement("div");n.className="growthnum";n.textContent="+"+fmt(v.views_gained)+" viz.";top.append(name,n);let detail=document.createElement("div");detail.className="growthdetail";detail.textContent="+"+fmt(v.likes_gained)+" aprecieri · +"+fmt(v.comments_gained)+" comentarii · +"+fmt(v.shares_gained)+" distribuiri";item.append(top,detail);box.append(item)})}catch(e){box.innerHTML='<div class="empty">Istoricul nu a putut fi încărcat. Încearcă din nou.</div>'}}
+function renderAnalysis(d){let box=$("topEngagement"),list=(d.videos||[]).filter(v=>v.engagement_rate!=null).sort((a,b)=>b.engagement_rate-a.engagement_rate).slice(0,5);box.replaceChildren();if(!list.length){box.innerHTML='<div class="empty">Nu există date suficiente pentru clasament.</div>';return}let max=Math.max(...list.map(v=>Number(v.engagement_rate)||0),.01);list.forEach((v,i)=>{let row=document.createElement("div");row.className="rank";let no=document.createElement("div");no.className="rankno";no.textContent=String(i+1).padStart(2,"0");let main=document.createElement("div");let name=document.createElement("div");name.className="ranktitle";let match=videos.find(x=>String(x.video_id)===String(v.video_id));name.textContent=v.title||(match?titleOf(match):"Videoclip TikTok");let det=document.createElement("div");det.className="rankdetail";det.textContent=fmt(v.views)+" vizualizări";let track=document.createElement("div");track.className="track";let bar=document.createElement("div");bar.className="bar";bar.style.width=Math.min(100,Number(v.engagement_rate)/max*100)+"%";track.append(bar);main.append(name,det,track);let val=document.createElement("div");val.className="rankval";val.textContent=pct(v.engagement_rate);row.append(no,main,val);box.append(row)});status(`Analiză finalizată pentru ${fmt(d.analyzed||d.videos.length)} videoclipuri. Engagement mediu per videoclip: ${pct(d.average_engagement_rate)}.`,"success")}
+$("sync").addEventListener("click",async()=>{if(busy)return;busyState(true);status("Se sincronizează videoclipurile TikTok și se salvează istoricul…");try{let d=await req("/sync-videos");await loadVideos(false);await loadGrowth();status(`Sincronizare reușită: ${fmt(d.synced)} înregistrări procesate în ${fmt(d.pages)} pagini. ${d.message||""}`,"success")}catch(e){status(e.message+" Dacă TikTok cere reconectare, apasă «Conectează TikTok».","error")}finally{busyState(false)}});
+$("analyze").addEventListener("click",async()=>{if(busy)return;busyState(true);status("Se analizează engagementul videoclipurilor…");try{renderAnalysis(await req("/analyze-videos"))}catch(e){status("Analiza nu a reușit: "+e.message,"error")}finally{busyState(false)}});
+$("refreshGrowth").addEventListener("click",async()=>{if(busy)return;busyState(true);try{await loadGrowth();status("Istoricul creșterii a fost actualizat.","success")}finally{busyState(false)}});
+$("search").addEventListener("input",renderVideos);$("sort").addEventListener("change",renderVideos);
+(async()=>{try{await loadVideos();await loadGrowth()}catch(e){status("Nu am putut încărca dashboardul: "+e.message+". Verifică backendul Render.","error")}})();
+</script>
 </body>
 </html>
-
