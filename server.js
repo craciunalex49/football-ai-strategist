@@ -242,7 +242,12 @@ app.get("/auth/callback", async (req, res) => {
     const result = await response.json();
 
     if (!response.ok || result.error || !result.access_token) {
-      console.error("TikTok token exchange failed:", result.error);
+      console.error("Failed to save TikTok tokens:", {
+  code: saveError.code,
+  message: saveError.message,
+  details: saveError.details,
+  hint: saveError.hint
+});
       return res.status(400).send(
         "TikTok token exchange failed. Check Render logs."
       );
