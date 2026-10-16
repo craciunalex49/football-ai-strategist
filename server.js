@@ -89,10 +89,46 @@ const supabase =
 
 const pendingStates = new Map();
 
-// Temporary single-user testing only.
-// Tokens are lost when the service restarts.
-let currentToken = null;
 
+let currentToken = null;
+// Recover the saved TikTok connection after a server restart.
+async function loadStoredToken() {
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { data, error } = await supabase
+    .from("tiktok_tokens")
+    .select(
+      "open_id, access_token_encrypted, refresh_token_encrypted, expires_at, scopes"
+    )
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Could not load saved TikTok connection:", error.code);
+    throw new Error("Could not load the saved TikTok connection.");
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  currentToken = {
+    access_token: decryptToken(data.access_token_encrypted),
+    refresh_token: data.refresh_token_encrypted
+      ? decryptToken(data.refresh_token_encrypted)
+      : null,
+    expires_at: data.expires_at
+      ? new Date(data.expires_at).getTime()
+      : 0,
+    open_id: data.open_id,
+    scope: data.scopes
+  };
+
+  return currentToken;
+}
 app.get("/", (req, res) => {
   res.send(`
     <h1>Football AI Strategist</h1>
@@ -242,16 +278,15 @@ app.get("/auth/callback", async (req, res) => {
     const result = await response.json();
 
     if (!response.ok || result.error || !result.access_token) {
-      console.error("Failed to save TikTok tokens:", {
-  code: saveError.code,
-  message: saveError.message,
-  details: saveError.details,
-  hint: saveError.hint
-});
-      return res.status(400).send(
-        "TikTok token exchange failed. Check Render logs."
-      );
-    }
+  console.error("TikTok token exchange failed:", {
+    status: response.status,
+    error: result.error || "Missing access token"
+  });
+
+  return res.status(400).send(
+    "TikTok token exchange failed. Check Render logs."
+  );
+}
 
    
     if (!supabase) {
@@ -308,17 +343,72 @@ app.get("/auth/callback", async (req, res) => {
 });
 
 app.get("/videos", async (req, res) => {
-  if (!currentToken) {
-    return res.status(401).send(
-      'TikTok is not connected. <a href="/oauth">Connect with TikTok</a>'
-    );
-  }
+  try {
+    if (!currentToken) {
+      await loadStoredToken();
+    }
 
-  if (Date.now() >= currentToken.expires_at) {
-    return res.status(401).send(
-      'Access token expired. <a href="/oauth">Reconnect with TikTok</a>'
+    if (!currentToken) {
+      return res.status(401).send(
+        'TikTok is not connected. <a href="/oauth">Connect with TikTok</a>'
+      );
+    }
+
+    if (Date.now() >= currentToken.expires_at) {
+      return res.status(401).send(
+        'Access token expired. <a href="/oauth">Reconnect with TikTok</a>'
+      );
+    }
+
+    const fields = [
+      "id",
+      "create_time",
+      "cover_image_url",
+      "share_url",
+      "video_description",
+      "duration",
+      "title",
+      "like_count",
+      "comment_count",
+      "share_count",
+      "view_count"
+    ].join(",");
+
+    const response = await fetch(
+      `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${currentToken.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ max_count: 20 })
+      }
     );
+
+    const result = await response.json();
+
+    if (!response.ok || result.error?.code !== "ok") {
+      console.error("TikTok video list failed:", result.error);
+      return res.status(502).json({
+        error: "TikTok could not return the video list.",
+        details: result.error || null
+      });
+    }
+
+    res.json({
+      count: result.data?.videos?.length || 0,
+      videos: result.data?.videos || [],
+      has_more: result.data?.has_more || false,
+      cursor: result.data?.cursor || null
+    });
+  } catch (err) {
+    console.error("Video request failed:", err.message);
+    res.status(500).json({
+      error: "Could not load TikTok videos."
+    });
   }
+});
 
   try {
     const fields = [
