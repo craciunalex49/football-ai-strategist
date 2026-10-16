@@ -1329,32 +1329,60 @@ DATE:
 ${JSON.stringify(userPayload)}
 `;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY
+ 
+let response;
+
+const maxAttempts = 4;
+const retryableStatuses = [429, 500, 502, 503, 504];
+
+for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
         },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }]
-            }
-          ],
-        
-          generationConfig: {
-            temperature: 0.7,
-            responseMimeType: "application/json"
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
           }
-        })
-      }
-    );
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json"
+        }
+      })
+    }
+  );
+
+  if (response.ok) {
+    break;
+  }
+
+  if (
+    !retryableStatuses.includes(response.status) ||
+    attempt === maxAttempts - 1
+  ) {
+    break;
+  }
+
+  const delayMs = 1000 * Math.pow(2, attempt);
+
+  console.warn(
+    `Gemini API returned ${response.status}. ` +
+    `Retry ${attempt + 1}/${maxAttempts - 1} in ${delayMs}ms.`
+  );
+
+  await response.text();
+  await new Promise(resolve => setTimeout(resolve, delayMs));
+}
 
 
  if (!response.ok) {
