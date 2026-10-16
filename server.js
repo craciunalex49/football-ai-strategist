@@ -248,13 +248,48 @@ app.get("/auth/callback", async (req, res) => {
       );
     }
 
+   
+    if (!supabase) {
+      return res.status(500).send("Supabase is not configured.");
+    }
+
+    if (!result.open_id || !result.expires_in) {
+      return res.status(502).send("TikTok returned incomplete token data.");
+    }
+
+    const expiresAt = Date.now() + Number(result.expires_in) * 1000;
+
+    const { error: saveError } = await supabase
+      .from("tiktok_tokens")
+      .upsert(
+        {
+          open_id: result.open_id,
+          access_token_encrypted: encryptToken(result.access_token),
+          refresh_token_encrypted: result.refresh_token
+            ? encryptToken(result.refresh_token)
+            : null,
+          expires_at: new Date(expiresAt).toISOString(),
+          scopes: result.scope || null,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "open_id" }
+      );
+
+    if (saveError) {
+      console.error("Failed to save TikTok tokens:", saveError.code);
+      return res.status(500).send(
+        "Could not save TikTok connection. Check server logs."
+      );
+    }
+
     currentToken = {
       access_token: result.access_token,
       refresh_token: result.refresh_token,
-      expires_at: Date.now() + result.expires_in * 1000,
+      expires_at: expiresAt,
       open_id: result.open_id,
       scope: result.scope
     };
+
 
     res.send(`
       <h1>TikTok connected successfully!</h1>
