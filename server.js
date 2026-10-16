@@ -596,6 +596,33 @@ app.get("/sync-videos", async (req, res) => {
           });
         }
 
+const historyRows = rows.map((row) => ({
+  video_id: row.video_id,
+  recorded_at: new Date().toISOString(),
+  view_count: row.view_count,
+  like_count: row.like_count,
+  comment_count: row.comment_count,
+  share_count: row.share_count
+}));
+
+const { error: historyError } = await supabase
+  .from("video_stats_history")
+  .insert(historyRows);
+
+if (historyError) {
+  console.error(
+    "Could not save video stats history:",
+    historyError.code
+  );
+
+  return res.status(500).json({
+    error: "Videos were synced, but their history could not be saved.",
+    code: historyError.code,
+    synced,
+    pages
+  });
+}
+
         synced += rows.length;
       }
 
