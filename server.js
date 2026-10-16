@@ -521,68 +521,119 @@ app.get("/sync-videos", async (req, res) => {
       "view_count"
     ].join(",");
 
-    const response = await fetch(
-      `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${currentToken.access_token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ max_count: 20 })
+    let cursor;
+    let hasMore = true;
+    let synced = 0;
+    let pages = 0;
+    const maxPages = 100;
+    const seenCursors = new Set();
+
+    while (hasMore && pages < maxPages) {
+      const body = { max_count: 20 };
+
+      if (cursor !== undefined && cursor !== null) {
+        body.cursor = cursor;
       }
-    );
 
-    const result = await response.json();
+      const response = await fetch(
+        `https://open.tiktokapis.com/v2/video/list/?fields=${encodeURIComponent(fields)}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${currentToken.access_token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        }
+      );
 
-    if (!response.ok || result.error?.code !== "ok") {
-      console.error("TikTok sync failed:", result.error);
+      const result = await response.json();
 
-      return res.status(502).json({
-        error: "Could not retrieve TikTok videos.",
-        details: result.error || null
-      });
-    }
+      if (!response.ok || result.error?.code !== "ok") {
+        console.error("TikTok sync failed:", result.error);
 
-    const videos = result.data?.videos || [];
-
-    const rows = videos.map((video) => ({
-      video_id: video.id,
-      create_time: video.create_time
-        ? new Date(video.create_time * 1000).toISOString()
-        : null,
-      description: video.video_description || null,
-      title: video.title || null,
-      duration: video.duration ?? null,
-      share_url: video.share_url || null,
-      cover_image_url: video.cover_image_url || null,
-      view_count: video.view_count ?? 0,
-      like_count: video.like_count ?? 0,
-      comment_count: video.comment_count ?? 0,
-      share_count: video.share_count ?? 0,
-      imported_at: new Date().toISOString()
-    }));
-
-    if (rows.length > 0) {
-      const { error } = await supabase
-        .from("tiktok_videos")
-        .upsert(rows, { onConflict: "video_id" });
-
-      if (error) {
-        console.error("Supabase video sync failed:", error.code);
-
-        return res.status(500).json({
-          error: "Could not save videos to Supabase.",
-          code: error.code
+        return res.status(502).json({
+          error: "Could not retrieve TikTok videos.",
+          details: result.error || null,
+          synced,
+          pages
         });
       }
+
+      const data = result.data || {};
+      const videos = data.videos || [];
+
+      const rows = videos.map((video) => ({
+        video_id: video.id,
+        create_time: video.create_time
+          ? new Date(video.create_time * 1000).toISOString()
+          : null,
+        description: video.video_description || null,
+        title: video.title || null,
+        duration: video.duration ?? null,
+        share_url: video.share_url || null,
+        cover_image_url: video.cover_image_url || null,
+        view_count: video.view_count ?? 0,
+        like_count: video.like_count ?? 0,
+        comment_count: video.comment_count ?? 0,
+        share_count: video.share_count ?? 0,
+        imported_at: new Date().toISOString()
+      }));
+
+      if (rows.length > 0) {
+        const { error } = await supabase
+          .from("tiktok_videos")
+          .upsert(rows, { onConflict: "video_id" });
+
+        if (error) {
+          console.error("Supabase video sync failed:", error.code);
+
+          return res.status(500).json({
+            error: "Could not save videos to Supabase.",
+            code: error.code,
+            synced,
+            pages
+          });
+        }
+
+        synced += rows.length;
+      }
+
+      pages += 1;
+      hasMore = Boolean(data.has_more);
+
+      if (!hasMore) {
+        break;
+      }
+
+      const nextCursor = data.cursor;
+
+      if (
+        nextCursor === undefined ||
+        nextCursor === null ||
+        seenCursors.has(String(nextCursor))
+      ) {
+        console.error("TikTok pagination stopped: invalid or repeated cursor.");
+
+        return res.status(502).json({
+          error: "Pagination stopped because TikTok returned an invalid or repeated cursor.",
+          synced,
+          pages
+        });
+      }
+
+      seenCursors.add(String(nextCursor));
+      cursor = nextCursor;
     }
 
     return res.json({
       success: true,
-      synced: rows.length,
-      has_more: result.data?.has_more || false,
-      message: "TikTok videos saved to Supabase."
+      synced,
+      pages,
+      has_more: hasMore,
+      message: hasMore
+        ? "Sync reached the 100-page safety limit. Run sync again to continue."
+        : "All available TikTok video pages were synchronized."
     });
   } catch (err) {
     console.error("Video sync failed:", err.message);
