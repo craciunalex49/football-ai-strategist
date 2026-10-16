@@ -1347,7 +1347,7 @@ ${JSON.stringify(userPayload)}
               parts: [{ text: prompt }]
             }
           ],
-          tools: [{ google_search: {} }],
+        
           generationConfig: {
             temperature: 0.7,
             responseMimeType: "application/json"
