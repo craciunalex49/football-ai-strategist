@@ -1,14 +1,15 @@
-
 const express = require("express");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
+
 const app = express();
 app.set("trust proxy", 1);
+
 const allowedOrigin = "https://craciunalex49.github.io";
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -17,17 +18,24 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.use(express.json({ limit: "100kb" }));
+
 const PORT = process.env.PORT || 3000;
 const CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
 const REDIRECT_URI = process.env.TIKTOK_REDIRECT_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
-
 const TOKEN_ENCRYPTION_KEY = process.env.TOKEN_ENCRYPTION_KEY;
 
 function encryptToken(value) {
-  if (!TOKEN_ENCRYPTION_KEY || !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)) {
-    throw new Error("TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters.");
+  if (
+    !TOKEN_ENCRYPTION_KEY ||
+    !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)
+  ) {
+    throw new Error(
+      "TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters."
+    );
   }
 
   const key = Buffer.from(TOKEN_ENCRYPTION_KEY, "hex");
@@ -49,11 +57,17 @@ function encryptToken(value) {
 }
 
 function decryptToken(value) {
-  if (!TOKEN_ENCRYPTION_KEY || !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)) {
-    throw new Error("TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters.");
+  if (
+    !TOKEN_ENCRYPTION_KEY ||
+    !/^[0-9a-f]{64}$/i.test(TOKEN_ENCRYPTION_KEY)
+  ) {
+    throw new Error(
+      "TOKEN_ENCRYPTION_KEY must be 64 hexadecimal characters."
+    );
   }
 
   const parts = value.split(":");
+
   if (parts.length !== 3) {
     throw new Error("Invalid encrypted token format.");
   }
@@ -89,8 +103,8 @@ const supabase =
 
 const pendingStates = new Map();
 
-
 let currentToken = null;
+
 // Recover the saved TikTok connection after a server restart.
 async function loadStoredToken() {
   if (!supabase) {
@@ -127,7 +141,7 @@ async function loadStoredToken() {
     scope: data.scopes
   };
 
-   return currentToken;
+  return currentToken;
 }
 
 // Refresh the TikTok access token before it expires.
@@ -149,8 +163,8 @@ async function refreshTikTokToken() {
   }
 
   const body = new URLSearchParams({
-    client_key: process.env.TIKTOK_CLIENT_KEY,
-    client_secret: process.env.TIKTOK_CLIENT_SECRET,
+    client_key: CLIENT_KEY,
+    client_secret: CLIENT_SECRET,
     grant_type: "refresh_token",
     refresh_token: currentToken.refresh_token
   });
@@ -175,7 +189,9 @@ async function refreshTikTokToken() {
       description: result.error_description || null
     });
 
-    throw new Error("TikTok token refresh failed. Reconnect if necessary.");
+    throw new Error(
+      "TikTok token refresh failed. Reconnect if necessary."
+    );
   }
 
   const newRefreshToken =
@@ -194,9 +210,15 @@ async function refreshTikTokToken() {
     .upsert(
       {
         open_id: updatedToken.open_id,
-        access_token_encrypted: encryptToken(updatedToken.access_token),
-        refresh_token_encrypted: encryptToken(updatedToken.refresh_token),
-        expires_at: new Date(updatedToken.expires_at).toISOString(),
+        access_token_encrypted: encryptToken(
+          updatedToken.access_token
+        ),
+        refresh_token_encrypted: encryptToken(
+          updatedToken.refresh_token
+        ),
+        expires_at: new Date(
+          updatedToken.expires_at
+        ).toISOString(),
         scopes: updatedToken.scope,
         updated_at: new Date().toISOString()
       },
@@ -204,16 +226,19 @@ async function refreshTikTokToken() {
     );
 
   if (error) {
-    console.error("Could not save refreshed TikTok token:", error.code);
+    console.error(
+      "Could not save refreshed TikTok token:",
+      error.code
+    );
     throw new Error("Could not save refreshed TikTok token.");
   }
 
   currentToken = updatedToken;
+
   console.log("TikTok access token refreshed and saved.");
 
   return currentToken;
 }
-
 app.get("/", (req, res) => {
   res.send(`
     <h1>Football AI Strategist</h1>
@@ -227,6 +252,7 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ service: "Football AI Strategist", status: "running" });
 });
+
 app.get("/supabase-health", async (req, res) => {
   if (!supabase) {
     return res.status(500).json({
@@ -241,7 +267,6 @@ app.get("/supabase-health", async (req, res) => {
       .select("id")
       .limit(1);
 
-    // A missing table is acceptable for this initial connectivity test.
     if (error && error.code !== "42P01" && error.code !== "PGRST205") {
       console.error("Supabase health check failed:", error.code);
       return res.status(502).json({
@@ -262,6 +287,7 @@ app.get("/supabase-health", async (req, res) => {
     });
   }
 });
+
 app.get("/oauth", (req, res) => {
   if (!CLIENT_KEY || !REDIRECT_URI || !SESSION_SECRET) {
     return res.status(500).send("Server configuration is incomplete.");
@@ -363,17 +389,16 @@ app.get("/auth/callback", async (req, res) => {
     const result = await response.json();
 
     if (!response.ok || result.error || !result.access_token) {
-  console.error("TikTok token exchange failed:", {
-    status: response.status,
-    error: result.error || "Missing access token"
-  });
+      console.error("TikTok token exchange failed:", {
+        status: response.status,
+        error: result.error || "Missing access token"
+      });
 
-  return res.status(400).send(
-    "TikTok token exchange failed. Check Render logs."
-  );
-}
+      return res.status(400).send(
+        "TikTok token exchange failed. Check Render logs."
+      );
+    }
 
-   
     if (!supabase) {
       return res.status(500).send("Supabase is not configured.");
     }
@@ -415,7 +440,6 @@ app.get("/auth/callback", async (req, res) => {
       scope: result.scope
     };
 
-
     res.send(`
       <h1>TikTok connected successfully!</h1>
       <p>Temporary test session created.</p>
@@ -426,7 +450,6 @@ app.get("/auth/callback", async (req, res) => {
     res.status(500).send("Authorization failed. Check Render logs.");
   }
 });
-
 app.get("/videos", async (req, res) => {
   try {
     if (!currentToken) {
@@ -440,14 +463,14 @@ app.get("/videos", async (req, res) => {
     }
 
     try {
-  await refreshTikTokToken();
-} catch (err) {
-  console.error("TikTok connection refresh failed:", err.message);
+      await refreshTikTokToken();
+    } catch (err) {
+      console.error("TikTok connection refresh failed:", err.message);
+      return res.status(401).send(
+        'TikTok connection needs attention. <a href="/oauth">Reconnect with TikTok</a>'
+      );
+    }
 
-  return res.status(401).send(
-    'TikTok connection needs attention. <a href="/oauth">Reconnect with TikTok</a>'
-  );
-}
     const fields = [
       "id",
       "create_time",
@@ -497,6 +520,7 @@ app.get("/videos", async (req, res) => {
     });
   }
 });
+
 app.get("/sync-videos", async (req, res) => {
   try {
     if (!supabase) {
@@ -551,7 +575,6 @@ app.get("/sync-videos", async (req, res) => {
 
       if (!response.ok || result.error?.code !== "ok") {
         console.error("TikTok sync failed:", result.error);
-
         return res.status(502).json({
           error: "Could not retrieve TikTok videos.",
           details: result.error || null,
@@ -587,7 +610,6 @@ app.get("/sync-videos", async (req, res) => {
 
         if (error) {
           console.error("Supabase video sync failed:", error.code);
-
           return res.status(500).json({
             error: "Could not save videos to Supabase.",
             code: error.code,
@@ -596,32 +618,32 @@ app.get("/sync-videos", async (req, res) => {
           });
         }
 
-const historyRows = rows.map((row) => ({
-  video_id: row.video_id,
-  recorded_at: new Date().toISOString(),
-  view_count: row.view_count,
-  like_count: row.like_count,
-  comment_count: row.comment_count,
-  share_count: row.share_count
-}));
+        const historyRows = rows.map((row) => ({
+          video_id: row.video_id,
+          recorded_at: new Date().toISOString(),
+          view_count: row.view_count,
+          like_count: row.like_count,
+          comment_count: row.comment_count,
+          share_count: row.share_count
+        }));
 
-const { error: historyError } = await supabase
-  .from("video_stats_history")
-  .insert(historyRows);
+        const { error: historyError } = await supabase
+          .from("video_stats_history")
+          .insert(historyRows);
 
-if (historyError) {
-  console.error(
-    "Could not save video stats history:",
-    historyError.code
-  );
+        if (historyError) {
+          console.error(
+            "Could not save video stats history:",
+            historyError.code
+          );
 
-  return res.status(500).json({
-    error: "Videos were synced, but their history could not be saved.",
-    code: historyError.code,
-    synced,
-    pages
-  });
-}
+          return res.status(500).json({
+            error: "Videos were synced, but their history could not be saved.",
+            code: historyError.code,
+            synced,
+            pages
+          });
+        }
 
         synced += rows.length;
       }
@@ -640,7 +662,9 @@ if (historyError) {
         nextCursor === null ||
         seenCursors.has(String(nextCursor))
       ) {
-        console.error("TikTok pagination stopped: invalid or repeated cursor.");
+        console.error(
+          "TikTok pagination stopped: invalid or repeated cursor."
+        );
 
         return res.status(502).json({
           error: "Pagination stopped because TikTok returned an invalid or repeated cursor.",
@@ -664,13 +688,11 @@ if (historyError) {
     });
   } catch (err) {
     console.error("Video sync failed:", err.message);
-
     return res.status(500).json({
       error: "Video synchronization failed."
     });
   }
 });
-
 app.get("/analyze-videos", async (req, res) => {
   try {
     if (!supabase) {
@@ -687,7 +709,6 @@ app.get("/analyze-videos", async (req, res) => {
 
     if (videosError) {
       console.error("Could not load videos for analysis:", videosError.code);
-
       return res.status(500).json({
         error: "Could not load videos from Supabase."
       });
@@ -779,7 +800,6 @@ app.get("/analyze-videos", async (req, res) => {
 
     if (saveError) {
       console.error("Could not save video analysis:", saveError.code);
-
       return res.status(500).json({
         error: "Could not save video analysis.",
         code: saveError.code
@@ -808,7 +828,6 @@ app.get("/analyze-videos", async (req, res) => {
     });
   } catch (err) {
     console.error("Video analysis failed:", err.message);
-
     return res.status(500).json({
       error: "Video analysis failed."
     });
@@ -823,7 +842,6 @@ app.get("/video-growth", async (req, res) => {
       });
     }
 
-    // Read the complete history in pages.
     let history = [];
     let start = 0;
     const pageSize = 1000;
@@ -840,7 +858,6 @@ app.get("/video-growth", async (req, res) => {
 
       if (error) {
         console.error("Could not load stats history:", error.code);
-
         return res.status(500).json({
           error: "Could not load video statistics history."
         });
@@ -913,18 +930,17 @@ app.get("/video-growth", async (req, res) => {
     return res.json({
       success: true,
       videos_compared: growth.length,
-      note: "Growth is measured between the two latest saved snapshots. Negative changes can occur if TikTok revises statistics.",
+      note:
+        "Growth is measured between the two latest saved snapshots. Negative changes can occur if TikTok revises statistics.",
       top_by_view_growth: growth.slice(0, 50)
     });
   } catch (err) {
     console.error("Video growth analysis failed:", err.message);
-
     return res.status(500).json({
       error: "Video growth analysis failed."
     });
   }
 });
-
 app.get("/stored-videos", async (req, res) => {
   try {
     if (!supabase) {
@@ -972,7 +988,392 @@ app.get("/stored-videos", async (req, res) => {
   }
 });
 
+// AI Content Strategist: generates ideas from real Supabase metrics.
+app.post("/ai-content-strategist", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        error: "Supabase is not configured."
+      });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({
+        error: "OPENAI_API_KEY is not configured on the backend. Add it to Render environment variables."
+      });
+    }
+
+    const requestedFocus =
+      typeof req.body?.focus === "string"
+        ? req.body.focus.trim().slice(0, 180)
+        : "";
+
+    const allVideos = [];
+    const pageSize = 1000;
+    let start = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from("tiktok_videos")
+        .select(
+          "video_id, title, description, create_time, duration, share_url, view_count, like_count, comment_count, share_count"
+        )
+        .order("create_time", { ascending: false })
+        .range(start, start + pageSize - 1);
+
+      if (error) {
+        console.error(
+          "AI strategist could not load Supabase videos:",
+          error.code
+        );
+
+        return res.status(500).json({
+          error: "Could not load video statistics from Supabase."
+        });
+      }
+
+      allVideos.push(...(data || []));
+
+      if (!data || data.length < pageSize) break;
+      start += pageSize;
+    }
+
+    if (!allVideos.length) {
+      return res.status(400).json({
+        error: "No saved videos found. Sync TikTok first."
+      });
+    }
+
+    const metricVideos = allVideos.map((v) => {
+      const views = Number(v.view_count) || 0;
+      const likes = Number(v.like_count) || 0;
+      const comments = Number(v.comment_count) || 0;
+      const shares = Number(v.share_count) || 0;
+
+      return {
+        title: (
+          v.title ||
+          v.description ||
+          "Videoclip fără titlu"
+        ).slice(0, 220),
+        description: (v.description || "").slice(0, 300),
+        duration_seconds: v.duration ?? null,
+        views,
+        likes,
+        comments,
+        shares,
+        engagement_rate_percent:
+          views > 0
+            ? Number(
+                (
+                  ((likes + comments + shares) / views) *
+                  100
+                ).toFixed(3)
+              )
+            : null,
+        created_at: v.create_time || null,
+        url: v.share_url || null
+      };
+    });
+
+    const valid = metricVideos.filter((v) => v.views > 0);
+
+    const totalViews = valid.reduce(
+      (sum, v) => sum + v.views,
+      0
+    );
+
+    const totalInteractions = valid.reduce(
+      (sum, v) => sum + v.likes + v.comments + v.shares,
+      0
+    );
+
+    const averageVideoEngagement = valid.length
+      ? valid.reduce(
+          (sum, v) => sum + (v.engagement_rate_percent || 0),
+          0
+        ) / valid.length
+      : null;
+
+    const topByViews = [...valid]
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 15);
+
+    const topByEngagement = [...valid]
+      .filter((v) => v.engagement_rate_percent !== null)
+      .sort(
+        (a, b) =>
+          b.engagement_rate_percent -
+          a.engagement_rate_percent
+      )
+      .slice(0, 15);
+
+    // Historical reference supplied by the creator.
+    // These are NOT live Supabase statistics.
+    const historicalExamples = [
+      {
+        title: "Efectul Cristiano Ronaldo",
+        views: 239000,
+        likes: 9142,
+        comments: 279,
+        shares: 413,
+        saves: 570,
+        followers_gained: 112,
+        duration_seconds: 15,
+        followers_per_1000_views: 0.469
+      },
+      {
+        title: "Cariera de fotbalist — Episodul 1",
+        views: 139000,
+        likes: 2161,
+        comments: 46,
+        shares: 39,
+        saves: 227,
+        followers_gained: 125,
+        duration_seconds: 177,
+        followers_per_1000_views: 0.899
+      },
+      {
+        title: "Jucătorii care au refuzat Real Madrid",
+        views: 101000,
+        likes: 2206,
+        comments: 129,
+        shares: 48,
+        saves: 144,
+        followers_gained: 80,
+        duration_seconds: 73,
+        followers_per_1000_views: 0.792
+      },
+      {
+        title: "Top 10 tineri jucători care vor domina fotbalul în 5 ani",
+        views: 26000,
+        likes: 448,
+        comments: 33,
+        shares: 19,
+        saves: 41,
+        followers_gained: 17,
+        duration_seconds: 112,
+        followers_per_1000_views: 0.654
+      },
+      {
+        title: "Top 10 momente World Cup — Partea 2",
+        views: 29000,
+        likes: 868,
+        comments: 22,
+        shares: 36,
+        saves: 39,
+        followers_gained: 11,
+        duration_seconds: 66,
+        followers_per_1000_views: 0.379
+      }
+    ];
+    const systemPrompt = `
+Ești Football AI Strategist, un strateg AI specializat în creșterea unui cont TikTok de fotbal din România.
+
+OBIECTIV PRINCIPAL
+Optimizează numărul de urmăritori noi obținuți la 1.000 de vizualizări (F1000), nu doar numărul de vizualizări.
+
+REGULI OBLIGATORII
+1. Nu inventa statistici, surse, evenimente sau rezultate.
+2. Separă datele reale din Supabase de exemplele istorice furnizate.
+3. Nu pretinde că datele TikTok disponibile includ urmăritori câștigați, salvări sau retenție. Aceste metrici nu sunt disponibile în datasetul live trimis aici.
+4. Nu considera un singur clip drept dovadă că un format funcționează.
+5. Compară formate numai când există suficiente clipuri comparabile. Cinci clipuri reprezintă un prag orientativ, nu o garanție de semnificație statistică.
+6. Folosește următoarele ponderi pentru scorul editorial:
+   - atragerea urmăritorilor: 35%
+   - relevanța pentru publicul român: 20%
+   - noutate și diferențiere: 15%
+   - verificabilitate: 15%
+   - potențial de distribuire: 15%.
+7. Acordă fiecărei componente o notă de la 1 la 5.
+8. Calculează scorul total astfel:
+   (35*F + 20*R + 15*N + 15*V + 15*D) / 5.
+   Scorul rezultat este între 20 și 100. Este un instrument de prioritizare editorială, nu o probabilitate de succes.
+9. Preferă idei relevante pentru publicul român, cu hook puternic, diferențiere și potențial de comentarii.
+10. Pentru știri actuale sau afirmații factuale care necesită verificare, indică exact ce trebuie verificat. Nu inventa surse și nu pretinde că ai verificat informații dacă nu ai acces la verificare.
+11. Recomandă teste în care se schimbă câte o singură variabilă.
+12. Răspunde în limba română.
+13. Generează exact 5 idei distincte.
+14. Folosește istoricul clipurilor ca semnal descriptiv, nu ca dovadă de cauzalitate.
+
+CATEGORII DE CONȚINUT
+- Serii recurente
+- Topuri și clasamente
+- Controverse și dezbateri
+- Știri actuale
+- Povești istorice
+- Analiză tactică
+- Profiluri de jucători
+
+Pentru fiecare idee, include hook, scenariu, titlu, hashtaguri, justificare, scoruri și un plan de testare.
+`;
+
+    const userPayload = {
+      focus: requestedFocus || "Alege ideile cu cel mai bun potențial pentru creșterea unui cont românesc de fotbal.",
+      live_dataset: {
+        source: "Supabase tiktok_videos",
+        total_videos: allVideos.length,
+        videos_with_views: valid.length,
+        total_views: totalViews,
+        total_interactions: totalInteractions,
+        weighted_engagement_rate_percent:
+          totalViews > 0
+            ? Number(
+                ((totalInteractions / totalViews) * 100).toFixed(3)
+              )
+            : null,
+        mean_video_engagement_rate_percent:
+          averageVideoEngagement === null
+            ? null
+            : Number(averageVideoEngagement.toFixed(3)),
+        top_by_views: topByViews,
+        top_by_engagement: topByEngagement,
+        unavailable_metrics: [
+          "followers_gained",
+          "saves",
+          "retention",
+          "completion_rate",
+          "profile_visits",
+          "traffic_sources"
+        ]
+      },
+      historical_examples_not_live: historicalExamples
+    };
+
+    const response = await fetch(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            },
+            {
+              role: "user",
+              content: `
+Analizează datele următoare și generează exact 5 idei.
+
+Returnează exclusiv un obiect JSON cu această structură:
+{
+  "summary": "Rezumatul analizei",
+  "ideas": [
+    {
+      "title": "Titlul ideii",
+      "category": "Categoria",
+      "hook": "Hook-ul pentru primele secunde",
+      "script": ["Replica 1", "Replica 2", "Replica 3"],
+      "video_title": "Titlul clipului",
+      "hashtags": ["#fotbal", "#romania"],
+      "justification": "De ce merită testată ideea",
+      "score": 80,
+      "score_breakdown": {
+        "follower_attraction": 4,
+        "romanian_relevance": 5,
+        "novelty": 4,
+        "verifiability": 4,
+        "shareability": 4
+      },
+      "evidence_type": "date_live | istoric | ipoteza_editoriala",
+      "verification_needed": ["Afirmația care trebuie verificată"],
+      "test_plan": "Cum testăm ideea",
+      "metrics_to_track": ["views", "likes", "comments", "shares", "followers_gained"]
+    }
+  ]
+}
+
+Scorul trebuie să respecte ponderile definite în system prompt. Folosește doar datele disponibile. Nu inventa metrici live.
+
+DATE:
+${JSON.stringify(userPayload)}
+`
+            }
+          ]
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error("OpenAI API request failed:", {
+        status: response.status,
+        details: errorText.slice(0, 1000)
+      });
+
+      return res.status(502).json({
+        error:
+          response.status === 401
+            ? "OpenAI API key is invalid or not accepted."
+            : response.status === 429
+              ? "OpenAI API quota or rate limit reached. Check API billing and limits."
+              : "The AI service could not generate ideas."
+      });
+    }
+
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return res.status(502).json({
+        error: "The AI service returned an empty response."
+      });
+    }
+
+    let generated;
+
+    try {
+      generated = JSON.parse(content);
+    } catch {
+      return res.status(502).json({
+        error: "The AI service returned invalid JSON. Try again."
+      });
+    }
+
+    if (!Array.isArray(generated.ideas) || generated.ideas.length !== 5) {
+      return res.status(502).json({
+        error: "The AI response did not contain exactly five ideas. Try again."
+      });
+    }
+
+    return res.json({
+      success: true,
+      generated_at: new Date().toISOString(),
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      dataset_summary: {
+        total_videos: allVideos.length,
+        videos_with_views: valid.length,
+        total_views: totalViews,
+        weighted_engagement_rate_percent:
+          totalViews > 0
+            ? Number(
+                ((totalInteractions / totalViews) * 100).toFixed(3)
+              )
+            : null,
+        mean_video_engagement_rate_percent:
+          averageVideoEngagement === null
+            ? null
+            : Number(averageVideoEngagement.toFixed(3))
+      },
+      ...generated
+    });
+  } catch (err) {
+    console.error("AI Content Strategist failed:", err.message);
+
+    return res.status(500).json({
+      error: "AI Content Strategist encountered an unexpected error."
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
 });
-
