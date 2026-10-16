@@ -4,7 +4,19 @@ const crypto = require("crypto");
 
 const app = express();
 app.set("trust proxy", 1);
+const allowedOrigin = "https://craciunalex49.github.io";
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 const PORT = process.env.PORT || 3000;
 const CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
