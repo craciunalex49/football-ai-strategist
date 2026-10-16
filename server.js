@@ -127,8 +127,93 @@ async function loadStoredToken() {
     scope: data.scopes
   };
 
+   return currentToken;
+}
+
+// Refresh the TikTok access token before it expires.
+async function refreshTikTokToken() {
+  if (!currentToken) {
+    await loadStoredToken();
+  }
+
+  if (!currentToken) {
+    throw new Error("No saved TikTok connection.");
+  }
+
+  if (Date.now() < currentToken.expires_at - 5 * 60 * 1000) {
+    return currentToken;
+  }
+
+  if (!currentToken.refresh_token) {
+    throw new Error("No TikTok refresh token. Reconnect TikTok.");
+  }
+
+  const body = new URLSearchParams({
+    client_key: process.env.TIKTOK_CLIENT_KEY,
+    client_secret: process.env.TIKTOK_CLIENT_SECRET,
+    grant_type: "refresh_token",
+    refresh_token: currentToken.refresh_token
+  });
+
+  const response = await fetch(
+    "https://open.tiktokapis.com/v2/oauth/token/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok || result.error || !result.access_token) {
+    console.error("TikTok token refresh failed:", {
+      status: response.status,
+      error: result.error || "Missing access token",
+      description: result.error_description || null
+    });
+
+    throw new Error("TikTok token refresh failed. Reconnect if necessary.");
+  }
+
+  const newRefreshToken =
+    result.refresh_token || currentToken.refresh_token;
+
+  const updatedToken = {
+    access_token: result.access_token,
+    refresh_token: newRefreshToken,
+    expires_at: Date.now() + result.expires_in * 1000,
+    open_id: result.open_id || currentToken.open_id,
+    scope: result.scope || currentToken.scope
+  };
+
+  const { error } = await supabase
+    .from("tiktok_tokens")
+    .upsert(
+      {
+        open_id: updatedToken.open_id,
+        access_token_encrypted: encryptToken(updatedToken.access_token),
+        refresh_token_encrypted: encryptToken(updatedToken.refresh_token),
+        expires_at: new Date(updatedToken.expires_at).toISOString(),
+        scopes: updatedToken.scope,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: "open_id" }
+    );
+
+  if (error) {
+    console.error("Could not save refreshed TikTok token:", error.code);
+    throw new Error("Could not save refreshed TikTok token.");
+  }
+
+  currentToken = updatedToken;
+  console.log("TikTok access token refreshed and saved.");
+
   return currentToken;
 }
+
 app.get("/", (req, res) => {
   res.send(`
     <h1>Football AI Strategist</h1>
