@@ -997,11 +997,11 @@ app.post("/ai-content-strategist", async (req, res) => {
       });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(503).json({
-        error: "OPENAI_API_KEY is not configured on the backend. Add it to Render environment variables."
-      });
-    }
+    if (!process.env.GEMINI_API_KEY) {
+  return res.status(503).json({
+    error: "GEMINI_API_KEY is not configured on the backend. Add it to Render environment variables."
+  });
+}
 
     const requestedFocus =
       typeof req.body?.focus === "string"
@@ -1240,27 +1240,12 @@ Pentru fiecare idee, include hook, scenariu, titlu, hashtaguri, justificare, sco
       historical_examples_not_live: historicalExamples
     };
 
-    const response = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt
-            },
-            {
-              role: "user",
-              content: `
-Analizează datele următoare și generează exact 5 idei.
+   
+    const geminiModel =
+      process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+    const prompt = `
+Analizează datele următoare și generează exact 5 idei distincte.
 
 Returnează exclusiv un obiect JSON cu această structură:
 {
@@ -1282,45 +1267,73 @@ Returnează exclusiv un obiect JSON cu această structură:
         "verifiability": 4,
         "shareability": 4
       },
-      "evidence_type": "date_live | istoric | ipoteza_editoriala",
-      "verification_needed": ["Afirmația care trebuie verificată"],
+      "evidence_type": "date_live",
+      "verification_needed": [],
       "test_plan": "Cum testăm ideea",
-      "metrics_to_track": ["views", "likes", "comments", "shares", "followers_gained"]
+      "metrics_to_track": ["views", "likes", "comments", "shares"]
     }
   ]
 }
 
-Scorul trebuie să respecte ponderile definite în system prompt. Folosește doar datele disponibile. Nu inventa metrici live.
+Scorul trebuie să respecte ponderile din instrucțiunile sistemului.
+Nu inventa statistici. Separă datele live de exemplele istorice.
+Răspunde în limba română.
 
 DATE:
 ${JSON.stringify(userPayload)}
-`
+`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            responseMimeType: "application/json"
+          }
         })
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
 
-      console.error("OpenAI API request failed:", {
-        status: response.status,
-        details: errorText.slice(0, 1000)
-      });
+ if (!response.ok) {
+  const errorText = await response.text();
 
-      return res.status(502).json({
-        error:
-          response.status === 401
-            ? "OpenAI API key is invalid or not accepted."
-            : response.status === 429
-              ? "OpenAI API quota or rate limit reached. Check API billing and limits."
-              : "The AI service could not generate ideas."
-      });
-    }
+  console.error("Gemini API request failed:", {
+    status: response.status,
+    details: errorText.slice(0, 1000)
+  });
 
+  return res.status(502).json({
+    error:
+      response.status === 400
+        ? "Gemini rejected the request. Check the model and request format."
+        : response.status === 401 || response.status === 403
+          ? "Gemini API key is invalid or does not have access."
+          : response.status === 429
+            ? "Gemini API quota or rate limit reached. Check your Google AI Studio limits."
+            : "The AI service could not generate ideas."
+  });
+}
     const result = await response.json();
-    const content = result.choices?.[0]?.message?.content;
+
+const content = (result.candidates?.[0]?.content?.parts || [])
+  .map(part => part.text || "")
+  .join("");
 
     if (!content) {
       return res.status(502).json({
@@ -1347,7 +1360,7 @@ ${JSON.stringify(userPayload)}
     return res.json({
       success: true,
       generated_at: new Date().toISOString(),
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    model: geminiModel,
       dataset_summary: {
         total_videos: allVideos.length,
         videos_with_views: valid.length,
