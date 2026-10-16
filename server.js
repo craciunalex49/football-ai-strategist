@@ -1206,6 +1206,35 @@ Acordă fiecărei componente o notă între 1 și 5:
 Calculează:
 (35*F + 20*R + 15*N + 15*V + 15*D) / 5
 Scorul trebuie să fie între 20 și 100. Nu îl prezenta drept probabilitate de viralizare sau garanție de succes.
+ACTUALITATE ȘI CĂUTARE WEB
+
+1. Înainte să generezi ideile, caută pe Google știri și evenimente
+   relevante din fotbalul românesc și internațional.
+
+2. Prioritizează evenimentele din ultimele 7 zile față de poveștile
+   istorice. Folosește data curentă reală, nu date presupuse.
+
+3. Cel puțin 3 dintre cele 5 idei trebuie să pornească de la evenimente
+   recente, dacă există suficiente subiecte relevante și verificabile.
+   Nu inventa noutăți pentru a îndeplini această cerință.
+
+4. Pentru fiecare știre, identifică evenimentul, data, persoanele
+   sau cluburile implicate și sursele web consultate.
+
+5. Include în fiecare idee un câmp "sources", cu URL-urile reale
+   ale surselor folosite, și un câmp "published_at" pentru data
+   publicării știrii sau articolului, dacă este disponibilă.
+
+6. Nu confunda data publicării unui articol cu data evenimentului.
+
+7. Nu prezenta o informație drept verificată dacă sursele găsite
+   nu o susțin. Dacă nu găsești suficiente dovezi, exclude subiectul.
+
+8. Nu folosi automat datele istorice din Supabase ca știri actuale.
+   Utilizează-le separat, doar pentru analiza performanței conținutului.
+
+9. Dacă nu există suficiente știri recente verificabile, explică
+   acest lucru și completează cu idei istorice clar etichetate.
 CATEGORII
 Serii recurente, topuri și clasamente, controverse și dezbateri, știri actuale, povești istorice, analiză tactică și profiluri de jucători.
 FORMATUL FIECĂREI IDEI
@@ -1318,6 +1347,7 @@ ${JSON.stringify(userPayload)}
               parts: [{ text: prompt }]
             }
           ],
+          tools: [{ google_search: {} }],
           generationConfig: {
             temperature: 0.7,
             responseMimeType: "application/json"
