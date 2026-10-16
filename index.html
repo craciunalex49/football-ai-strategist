@@ -70,6 +70,20 @@ input,select{padding:10px 11px;border:1px solid #2b405b;border-radius:10px;backg
 .growthnum{color:#40d6a0;font-size:12px;font-weight:800;white-space:nowrap}
 .empty{color:var(--muted);font-size:13px;padding:16px 0;line-height:1.6}
 .note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px}
+
+.ai-controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.ai-controls input{flex:1;min-width:220px}
+.ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:14px}
+.ai-card{background:#0a1727;border:1px solid #294463;border-radius:14px;padding:16px;min-width:0}
+.ai-card h3{font-size:16px;line-height:1.4;margin:8px 0 12px}
+.ai-card h4{font-size:12px;margin:15px 0 6px;color:#8cc7ff}
+.ai-card p,.ai-card li{font-size:12px;line-height:1.6;color:#c5d4e7;overflow-wrap:anywhere}
+.ai-card ul,.ai-card ol{padding-left:20px;margin:6px 0}
+.ai-score{display:inline-flex;padding:5px 9px;border-radius:20px;background:#10342f;color:#9cebd0;border:1px solid #1d5148;font-size:11px;font-weight:800}
+.ai-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ai-tag{font-size:11px;color:#9cc8ff;background:#132c49;border-radius:20px;padding:5px 8px;overflow-wrap:anywhere}
+@media(max-width:680px){.ai-grid{grid-template-columns:1fr}}
+  
 footer{text-align:center;padding:24px;color:#6e829c;font-size:12px;border-top:1px solid #1b2b40}
 footer a{color:#81b7ff}
 @media(max-width:950px){.layout{grid-template-columns:1fr}}
@@ -116,6 +130,42 @@ footer a{color:#81b7ff}
     <div class="panelhead"><div><h2>Recomandări pentru următorul clip</h2><div class="panelsub">Sugestii statistice generate din videoclipurile tale</div></div><span class="pill">Data-driven</span></div>
     <div id="insights"><div class="empty">Se analizează statisticile…</div></div>
     <div class="note">Acestea sunt recomandări bazate pe reguli și statistici, nu predicții garantate sau răspunsuri de la un model AI conectat.</div>
+  </section>
+
+  <section class="panel" id="aiStrategist">
+    <div class="panelhead">
+      <div>
+        <h2>✦ AI Content Strategist</h2>
+        <div class="panelsub">5 idei personalizate pe baza statisticilor din Supabase</div>
+      </div>
+      <span class="pill">OpenAI · Supabase</span>
+    </div>
+
+    <p>Generează idei de clipuri cu hook, scenariu, titlu, hashtaguri și scor strategic.</p>
+
+    <div class="ai-controls">
+      <input
+        id="aiFocus"
+        type="text"
+        maxlength="180"
+        placeholder="Subiect preferat (opțional), ex. fotbal românesc"
+        aria-label="Subiect preferat pentru ideile AI"
+      >
+      <button id="generateIdeas">✦ Generează 5 idei AI</button>
+    </div>
+
+    <div id="aiStatus" class="empty" role="status">
+      Apasă butonul pentru a genera idei pe baza datelor tale.
+    </div>
+
+    <div id="aiSummary" class="note"></div>
+    <div id="aiIdeas" class="ai-grid"></div>
+
+    <div class="note">
+      Scorurile sunt prioritizări editoriale, nu garanții de succes.
+      Verifică afirmațiile și sursele înainte de publicare.
+      Datele live nu includ neapărat urmăritori câștigați, salvări sau retenție.
+    </div>
   </section>
 
   <div class="layout">
@@ -281,6 +331,179 @@ function renderAnalysis(d){
   });
   status(`Analiză finalizată pentru ${fmt(d.analyzed||d.videos.length)} videoclipuri. Engagement mediu per videoclip: ${pct(d.average_engagement_rate)}.`,"success");
 }
+
+function addAIText(parent, tag, value, className) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  el.textContent = value == null ? "" : String(value);
+  parent.append(el);
+  return el;
+}
+
+function addAIList(parent, heading, values, ordered = false) {
+  if (!Array.isArray(values) || !values.length) return;
+
+  addAIText(parent, "h4", heading);
+
+  const list = document.createElement(ordered ? "ol" : "ul");
+
+  values.forEach(value => {
+    addAIText(list, "li", value);
+  });
+
+  parent.append(list);
+}
+
+function renderAIIdeas(data) {
+  const container = $("aiIdeas");
+  container.replaceChildren();
+
+  $("aiSummary").textContent = data.summary || "";
+
+  const ds = data.dataset_summary || {};
+
+  const engagement = ds.weighted_engagement_rate_percent;
+
+  $("aiStatus").textContent =
+    `Au fost generate ${data.ideas.length} idei. ` +
+    `${fmt(ds.total_videos)} clipuri · ` +
+    `${fmt(ds.total_views)} vizualizări · ` +
+    `engagement ponderat: ${
+      engagement == null ? "indisponibil" : pct(engagement)
+    }`;
+
+  $("aiStatus").className = "status success";
+
+  data.ideas.forEach((idea, index) => {
+    const card = document.createElement("article");
+    card.className = "ai-card";
+
+    addAIText(
+      card,
+      "div",
+      `IDEA ${index + 1} · ${idea.category || "Format de testat"}`,
+      "eyebrow"
+    );
+
+    addAIText(card, "h3", idea.title || "Idee de clip");
+
+    addAIText(
+      card,
+      "div",
+      `Scor strategic: ${idea.score ?? "—"}/100`,
+      "ai-score"
+    );
+
+    addAIText(card, "h4", "HOOK");
+    addAIText(card, "p", idea.hook || "Nespecificat");
+
+    addAIList(card, "SCENARIU", idea.script, true);
+
+    addAIText(card, "h4", "TITLU PENTRU CLIP");
+    addAIText(card, "p", idea.video_title || "Nespecificat");
+
+    if (Array.isArray(idea.hashtags) && idea.hashtags.length) {
+      const tags = document.createElement("div");
+      tags.className = "ai-tags";
+
+      idea.hashtags.forEach(tag => {
+        const hashtag = String(tag).startsWith("#")
+          ? tag
+          : `#${tag}`;
+
+        addAIText(tags, "span", hashtag, "ai-tag");
+      });
+
+      card.append(tags);
+    }
+
+    addAIText(card, "h4", "JUSTIFICARE");
+    addAIText(card, "p", idea.justification || "Nespecificată");
+
+    const scores = idea.score_breakdown;
+
+    if (scores) {
+      addAIText(card, "h4", "SCORURI (1–5)");
+
+      addAIText(
+        card,
+        "p",
+        [
+          `Urmăritori: ${scores.follower_attraction ?? "—"}/5`,
+          `Relevanță RO: ${scores.romanian_relevance ?? "—"}/5`,
+          `Noutate: ${scores.novelty ?? "—"}/5`,
+          `Verificabilitate: ${scores.verifiability ?? "—"}/5`,
+          `Distribuire: ${scores.shareability ?? "—"}/5`
+        ].join(" · ")
+      );
+    }
+
+    addAIText(
+      card,
+      "p",
+      `Fundamentare: ${idea.evidence_type || "ipoteză editorială"}`
+    );
+
+    addAIList(
+      card,
+      "DE VERIFICAT ÎNAINTE DE PUBLICARE",
+      idea.verification_needed
+    );
+
+    addAIText(card, "h4", "PLAN DE TESTARE");
+    addAIText(
+      card,
+      "p",
+      idea.test_plan || "Compară rezultatele în condiții similare."
+    );
+
+    addAIList(card, "METRICI DE URMĂRIT", idea.metrics_to_track);
+
+    container.append(card);
+  });
+}
+
+$("generateIdeas").addEventListener("click", async () => {
+  const button = $("generateIdeas");
+
+  if (button.disabled) return;
+
+  button.disabled = true;
+  button.textContent = "Se generează…";
+
+  $("aiStatus").className = "empty";
+  $("aiStatus").textContent =
+    "AI-ul analizează datele din Supabase. Așteaptă răspunsul…";
+
+  $("aiIdeas").replaceChildren();
+  $("aiSummary").textContent = "";
+
+  try {
+    const data = await req("/ai-content-strategist", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        focus: $("aiFocus").value.trim()
+      })
+    });
+
+    if (!Array.isArray(data.ideas) || data.ideas.length !== 5) {
+      throw new Error("Răspunsul AI nu conține exact 5 idei.");
+    }
+
+    renderAIIdeas(data);
+  } catch (error) {
+    $("aiStatus").className = "status error";
+    $("aiStatus").textContent =
+      error.message || "Nu s-au putut genera ideile AI.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "✦ Generează 5 idei AI";
+  }
+});
+  
 $("sync").addEventListener("click",async()=>{
   if(busy)return;busyState(true);status("Se sincronizează videoclipurile TikTok și se salvează istoricul…");
   try{const d=await req("/sync-videos");await loadVideos(false);await loadGrowth();status(`Sincronizare reușită: ${fmt(d.synced)} înregistrări procesate în ${fmt(d.pages)} pagini.`,"success")}
