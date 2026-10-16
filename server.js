@@ -1,7 +1,7 @@
 
 const express = require("express");
 const crypto = require("crypto");
-
+const { createClient } = require("@supabase/supabase-js");
 const app = express();
 app.set("trust proxy", 1);
 const allowedOrigin = "https://craciunalex49.github.io";
@@ -22,7 +22,13 @@ const CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
 const REDIRECT_URI = process.env.TIKTOK_REDIRECT_URI;
 const SESSION_SECRET = process.env.SESSION_SECRET;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
+const supabase =
+  SUPABASE_URL && SUPABASE_SECRET_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY)
+    : null;
 const pendingStates = new Map();
 
 // Temporary single-user testing only.
@@ -42,7 +48,41 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ service: "Football AI Strategist", status: "running" });
 });
+app.get("/supabase-health", async (req, res) => {
+  if (!supabase) {
+    return res.status(500).json({
+      status: "error",
+      message: "Supabase environment variables are missing."
+    });
+  }
 
+  try {
+    const { error } = await supabase
+      .from("connection_test")
+      .select("id")
+      .limit(1);
+
+    // A missing table is acceptable for this initial connectivity test.
+    if (error && error.code !== "42P01" && error.code !== "PGRST205") {
+      console.error("Supabase health check failed:", error.code);
+      return res.status(502).json({
+        status: "error",
+        message: "Supabase connection check failed."
+      });
+    }
+
+    return res.json({
+      status: "connected",
+      service: "Football AI Strategist"
+    });
+  } catch (err) {
+    console.error("Supabase health check error:", err.message);
+    return res.status(502).json({
+      status: "error",
+      message: "Supabase connection check failed."
+    });
+  }
+});
 app.get("/oauth", (req, res) => {
   if (!CLIENT_KEY || !REDIRECT_URI || !SESSION_SECRET) {
     return res.status(500).send("Server configuration is incomplete.");
