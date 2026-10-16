@@ -925,6 +925,53 @@ app.get("/video-growth", async (req, res) => {
   }
 });
 
+app.get("/stored-videos", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({
+        error: "Supabase is not configured."
+      });
+    }
+
+    const allVideos = [];
+    const pageSize = 1000;
+    let start = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from("tiktok_videos")
+        .select(
+          "video_id, title, description, create_time, duration, share_url, cover_image_url, view_count, like_count, comment_count, share_count"
+        )
+        .order("create_time", { ascending: false })
+        .range(start, start + pageSize - 1);
+
+      if (error) {
+        console.error("Could not load stored videos:", error.code);
+        return res.status(500).json({
+          error: "Could not load stored videos."
+        });
+      }
+
+      allVideos.push(...(data || []));
+
+      if (!data || data.length < pageSize) break;
+      start += pageSize;
+    }
+
+    return res.json({
+      success: true,
+      count: allVideos.length,
+      videos: allVideos
+    });
+  } catch (err) {
+    console.error("Stored videos request failed:", err.message);
+    return res.status(500).json({
+      error: "Could not load stored videos."
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Football AI Strategist listening on port ${PORT}`);
 });
