@@ -989,7 +989,7 @@ app.get("/stored-videos", async (req, res) => {
 });
 
 async function fetchRecentFootballNews(focus = "") {
-  const feeds = [
+   const feeds = [
     {
       name: "GSP",
       url: "https://www.gsp.ro/rss.xml"
@@ -1000,6 +1000,19 @@ async function fetchRecentFootballNews(focus = "") {
     }
   ];
 
+  if (focus && focus.trim()) {
+    const searchParams = new URLSearchParams({
+      q: `${focus.trim()} when:7d`,
+      hl: "ro",
+      gl: "RO",
+      ceid: "RO:ro"
+    });
+
+    feeds.push({
+      name: "Google News",
+      url: `https://news.google.com/rss/search?${searchParams.toString()}`
+    });
+  }
   function cleanText(value = "") {
     return value
       .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -1068,6 +1081,7 @@ async function fetchRecentFootballNews(focus = "") {
     })
   );
 
+
   const news = results
     .filter((result) => result.status === "fulfilled")
     .flatMap((result) => result.value);
@@ -1076,8 +1090,19 @@ async function fetchRecentFootballNews(focus = "") {
     ...new Map(news.map((item) => [item.url, item])).values()
   ];
 
-  return uniqueNews
-    .sort((a, b) => b.publishedTimestamp - a.publishedTimestamp)
+  const sortedNews = uniqueNews.sort((a, b) => {
+    if (focus && focus.trim()) {
+      const aIsGoogleNews = a.source === "Google News";
+      const bIsGoogleNews = b.source === "Google News";
+
+      if (aIsGoogleNews && !bIsGoogleNews) return -1;
+      if (!aIsGoogleNews && bIsGoogleNews) return 1;
+    }
+
+    return b.publishedTimestamp - a.publishedTimestamp;
+  });
+
+  return sortedNews
     .slice(0, 20)
     .map(({ publishedTimestamp, ...article }) => article);
 }
@@ -1405,10 +1430,21 @@ SUBIECTUL PREFERAT:
 ACTUALITATE:
 - Folosește recent_news pentru ideile bazate pe știri recente.
 - Prioritizează articolele publicate în ultimele 7 zile.
+
+- Dacă focus nu este gol, toate cele 5 idei trebuie să fie direct relevante pentru subiectul solicitat.
+- Prioritizează articolele din recent_news care menționează subiectul solicitat în titlu sau descriere.
+- Nu considera automat că un articol Google News este relevant doar pentru că provine din căutarea subiectului.
+- Dacă nu găsești suficiente articole relevante, completează cu idei istorice despre același subiect.
+
 - Nu inventa date, evenimente sau statistici.
 - Folosește titlul, data și URL-ul articolului pentru fiecare idee de actualitate.
 - Dacă nu există suficiente știri relevante, generează idei istorice și etichetează-le clar.
 - Nu pretinde că ai verificat informații suplimentare.
+
+- Pentru fiecare idee recentă, sources trebuie să conțină cel puțin un articol relevant din recent_news.
+- published_at trebuie să fie data exactă a articolului principal sau null pentru ideile istorice.
+- Nu folosi un articol general despre fotbal ca sursă pentru o idee despre un jucător dacă articolul nu susține acea legătură.
+- Dacă nu există o sursă relevantă, folosește evidence_type: "historical" și sources: [].
 
 Returnează exclusiv un obiect JSON cu această structură:
 {
