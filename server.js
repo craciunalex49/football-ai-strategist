@@ -1431,32 +1431,22 @@ SUBIECTUL PREFERAT:
 - Pentru o competiție, concentrează ideile pe acea competiție, echipele participante, jucători și evenimente relevante.
 - Respectă în continuare regulile privind sursele, actualitatea și verificarea informațiilor.
 - Dacă "focus" este gol, folosește strategia generală și datele contului pentru a selecta ideile.
-ACTUALITATE:
-- Folosește recent_news pentru ideile bazate pe știri recente.
-- Prioritizează articolele publicate în ultimele 7 zile.
 
+ACTUALITATE ȘI SURSE:
+- Analizează articolele din recent_news înainte să alegi ideile.
 - Dacă focus nu este gol, toate cele 5 idei trebuie să fie direct relevante pentru subiectul solicitat.
-- Prioritizează articolele din recent_news care menționează subiectul solicitat în titlu sau descriere.
-- Nu considera automat că un articol Google News este relevant doar pentru că provine din căutarea subiectului.
-- Dacă nu găsești suficiente articole relevante, completează cu idei istorice despre același subiect.
+- Folosește o știre recentă numai dacă un articol din recent_news susține direct subiectul și afirmațiile principale ale ideii.
+- Nu folosi articole despre alți jucători sau evenimente doar pentru că apar în același flux RSS.
+- Pentru fiecare idee bazată pe o știre, evidence_type trebuie să fie "recent_news", iar sources trebuie să conțină cel puțin un articol relevant din recent_news.
+- Copiază titlul și URL-ul exact al articolului din recent_news. Nu inventa și nu modifica URL-uri.
+- Data din RSS este data declarată de feed, nu o dată originală verificată independent.
+- Nu pretinde că ai verificat data originală sau conținutul paginii articolului.
+- Dacă folosești o sursă RSS, menționează în verification_needed că data originală trebuie verificată înainte de publicare.
+- Dacă nu există suficiente articole relevante, completează cu idei istorice despre același subiect.
+- Pentru ideile istorice, folosește evidence_type: "historical", sources: [] și published_at: null.
+- Nu inventa evenimente, statistici, date sau surse.
+- Generează exact 5 idei distincte.
 
-- Nu inventa date, evenimente sau statistici.
-- Folosește titlul, data și URL-ul articolului pentru fiecare idee de actualitate.
-- Dacă nu există suficiente știri relevante, generează idei istorice și etichetează-le clar.
-- Nu pretinde că ai verificat informații suplimentare.
-
-- Pentru fiecare idee recentă, sources trebuie să conțină cel puțin un articol relevant din recent_news.
-- published_at trebuie să fie data exactă a articolului principal sau null pentru ideile istorice.
-- Nu folosi un articol general despre fotbal ca sursă pentru o idee despre un jucător dacă articolul nu susține acea legătură.
-- Dacă nu există o sursă relevantă, folosește evidence_type: "historical" și sources: [].
-
-- Data publicării din RSS este doar data declarată de feed și NU confirmă data publicării originale a articolului.
-- Verifică pentru fiecare articol câmpul "original_publication_date_verified".
-- Dacă "original_publication_date_verified" este false, nu folosi articolul ca dovadă că evenimentul este o știre recentă.
-- Nu prezenta "published_at" ca dată originală verificată dacă aceasta provine doar din RSS.
-- Nu transforma automat un articol vechi într-o știre actuală doar pentru că feed-ul RSS afișează o dată recentă.
-- Dacă data originală nu este verificată independent, generează o idee istorică, cu "evidence_type": "historical", "sources": [] și "published_at": null.
-- Nu inventa date originale și nu pretinde că ai verificat pagina articolului.
 
 Returnează exclusiv un obiect JSON cu această structură:
 {
