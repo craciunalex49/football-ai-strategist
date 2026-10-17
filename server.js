@@ -186,7 +186,7 @@ async function refreshTikTokToken() {
     console.error("TikTok token refresh failed:", {
       status: response.status,
       error: result.error || "Missing access token",
-      description: result.error_description || null
+      deion: result.error_deion || null
     });
 
     throw new Error(
@@ -318,11 +318,11 @@ app.get("/oauth", (req, res) => {
 });
 
 app.get("/auth/callback", async (req, res) => {
-  const { code, state, error, error_description } = req.query;
+  const { code, state, error, error_deion } = req.query;
 
   if (error) {
     return res.status(400).send(
-      `TikTok authorization failed: ${String(error_description || error)}`
+      `TikTok authorization failed: ${String(error_deion || error)}`
     );
   }
 
@@ -536,7 +536,7 @@ app.get("/sync-videos", async (req, res) => {
       "create_time",
       "cover_image_url",
       "share_url",
-      "video_description",
+      "video_deion",
       "duration",
       "title",
       "like_count",
@@ -1399,7 +1399,7 @@ FORMATUL FIECĂREI IDEI
 - title: titlu specific, cu subiect identificabil
 - category
 - hook: introducere concretă, gata de rostit
-- script: 4–6 replici cu informație reală și progresie narativă
+- script: text integral pentru narare, scris ca un singur paragraf coerent, cu propoziții complete, tranziții naturale și informații concrete; NU returna o listă de replici sau puncte numerotate. Respectă lungimile orientative din regulile pentru scenarii.
 - video_title
 - hashtags
 - justification: explică de ce merită testată, fără a inventa rezultate
