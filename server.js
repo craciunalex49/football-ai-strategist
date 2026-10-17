@@ -1409,9 +1409,11 @@ FORMATUL FIECĂREI IDEI
 - verification_needed: afirmații concrete de verificat
 - test_plan
 - metrics_to_track
-- visual_suggestions: listă de 4-6 secvențe vizuale specifice subiectului
-- fiecare secvență trebuie să includă intervalul aproximativ, imaginea sau videoclipul recomandat și textul scurt afișat pe ecran
-- recomandă materiale concrete de căutat, precum faze de joc, fotografii ale jucătorilor, imagini de la meciuri sau capturi din surse; nu inventa linkuri și nu pretinde că materialele au fost găsite
+- visual_suggestions: listă de 4-6 obiecte, fiecare cu interval, visual și on_screen_text
+- interval: timpul exact din clip, de exemplu "00:00-00:03"
+- visual: descriere concretă a imaginii sau videoclipului de folosit, de exemplu "cadru cu Lamine Yamal în timpul meciului, cu mingea la picior"; nu lăsa niciodată câmpul gol
+- on_screen_text: textul scurt afișat pe ecran în secvența respectivă
+- Recomandă materiale vizuale concrete, ușor de căutat; nu inventa linkuri și nu pretinde că ai găsit fișierele
 Răspunde în română. Generează exact 5 idei distincte.
 `;
 const recentFootballNews = await fetchRecentFootballNews(requestedFocus);
