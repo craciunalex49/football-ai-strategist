@@ -1656,7 +1656,17 @@ generated.ideas = generated.ideas.map((idea) => ({
   sources: Array.isArray(idea.sources) ? idea.sources : [],
   published_at: idea.published_at || null
 }));
-
+console.log(
+  "VISUAL SUGGESTIONS DEBUG:",
+  JSON.stringify(
+    generated.ideas.map((idea) => ({
+      title: idea.title,
+      visual_suggestions: idea.visual_suggestions
+    })),
+    null,
+    2
+  )
+);
     // Validate generated sources against the actual RSS articles.
  
 const trustedNews = new Map(
