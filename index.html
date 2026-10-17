@@ -405,7 +405,35 @@ addAIText(
     ? idea.script.join(" ")
     : idea.script || "Scenariu indisponibil"
 );
+addAIText(card, "h4", "MATERIALE VIZUALE PENTRU CLIP");
 
+if (
+  Array.isArray(idea.visual_suggestions) &&
+  idea.visual_suggestions.length > 0
+) {
+  idea.visual_suggestions.forEach((item, index) => {
+    const details =
+      typeof item === "string"
+        ? item
+        : [
+            item.interval,
+            item.visual || item.description || item.recommended_visual,
+            item.on_screen_text
+              ? `Text pe ecran: ${item.on_screen_text}`
+              : ""
+          ]
+            .filter(Boolean)
+            .join(" — ");
+
+    addAIText(card, "p", `${index + 1}. ${details}`);
+  });
+} else {
+  addAIText(
+    card,
+    "p",
+    "Materialele vizuale vor fi recomandate după generarea următoarelor idei."
+  );
+}
     addAIText(card, "h4", "TITLU PENTRU CLIP");
     addAIText(card, "p", idea.video_title || "Nespecificat");
 
