@@ -457,13 +457,13 @@ function renderAIIdeas(data) {
 
     addAIText(card, "h4", evidenceLabel);
 
-    if (idea.published_at) {
-      addAIText(
-        card,
-        "p",
-        `Data publicării: ${idea.published_at}`
-      );
-    }
+if (idea.published_at) {
+  addAIText(
+    card,
+    "p",
+    `Data afișată de RSS (neverificată): ${idea.published_at}`
+  );
+}
 
     if (Array.isArray(idea.sources) && idea.sources.length > 0) {
       addAIText(card, "h4", "SURSE");
