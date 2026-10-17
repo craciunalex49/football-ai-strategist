@@ -1409,6 +1409,9 @@ FORMATUL FIECĂREI IDEI
 - verification_needed: afirmații concrete de verificat
 - test_plan
 - metrics_to_track
+- visual_suggestions: listă de 4-6 secvențe vizuale specifice subiectului
+- fiecare secvență trebuie să includă intervalul aproximativ, imaginea sau videoclipul recomandat și textul scurt afișat pe ecran
+- recomandă materiale concrete de căutat, precum faze de joc, fotografii ale jucătorilor, imagini de la meciuri sau capturi din surse; nu inventa linkuri și nu pretinde că materialele au fost găsite
 Răspunde în română. Generează exact 5 idei distincte.
 `;
 const recentFootballNews = await fetchRecentFootballNews(requestedFocus);
