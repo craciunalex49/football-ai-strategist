@@ -1063,14 +1063,18 @@ async function fetchRecentFootballNews(focus = "") {
         const description = getTag(item, "description");
         const publishedTimestamp = Date.parse(publishedAt);
 
-        return {
-          source: feed.name,
-          title,
-          url: link,
-          published_at: publishedAt,
-          description: description.slice(0, 500),
-          publishedTimestamp
-        };
+     
+return {
+  source: feed.name,
+  title,
+  url: link,
+  published_at: publishedAt,
+  published_at_source: "rss_feed",
+  original_publication_date_verified: false,
+  description: description.slice(0, 500),
+  publishedTimestamp
+};
+
       }).filter((article) =>
         article.title &&
         article.url.startsWith("https://") &&
@@ -1446,6 +1450,14 @@ ACTUALITATE:
 - Nu folosi un articol general despre fotbal ca sursă pentru o idee despre un jucător dacă articolul nu susține acea legătură.
 - Dacă nu există o sursă relevantă, folosește evidence_type: "historical" și sources: [].
 
+- Data publicării din RSS este doar data declarată de feed și NU confirmă data publicării originale a articolului.
+- Verifică pentru fiecare articol câmpul "original_publication_date_verified".
+- Dacă "original_publication_date_verified" este false, nu folosi articolul ca dovadă că evenimentul este o știre recentă.
+- Nu prezenta "published_at" ca dată originală verificată dacă aceasta provine doar din RSS.
+- Nu transforma automat un articol vechi într-o știre actuală doar pentru că feed-ul RSS afișează o dată recentă.
+- Dacă data originală nu este verificată independent, generează o idee istorică, cu "evidence_type": "historical", "sources": [] și "published_at": null.
+- Nu inventa date originale și nu pretinde că ai verificat pagina articolului.
+
 Returnează exclusiv un obiect JSON cu această structură:
 {
   "summary": "Rezumatul analizei",
@@ -1611,53 +1623,63 @@ generated.ideas = generated.ideas.map((idea) => ({
 }));
 
     // Validate generated sources against the actual RSS articles.
-    const trustedNews = new Map(
-      recentFootballNews.map((article) => [
-        article.url,
-        article
-      ])
-    );
+ 
+const trustedNews = new Map(
+  recentFootballNews.map((article) => [
+    article.url,
+    article
+  ])
+);
 
-    generated.ideas = (generated.ideas || []).map((idea) => {
-      const validSources = Array.isArray(idea.sources)
-        ? idea.sources
-            .filter((source) =>
-              source &&
-              typeof source.url === "string" &&
-              trustedNews.has(source.url)
-            )
-            .map((source) => {
-              const article = trustedNews.get(source.url);
+generated.ideas = (generated.ideas || []).map((idea) => {
+  const validSources = Array.isArray(idea.sources)
+    ? idea.sources
+        .filter((source) =>
+          source &&
+          typeof source.url === "string" &&
+          trustedNews.has(source.url)
+        )
+        .map((source) => {
+          const article = trustedNews.get(source.url);
 
-              return {
-                title: article.title,
-                url: article.url,
-                published_at: article.published_at
-              };
-            })
-        : [];
+          return {
+            title: article.title,
+            url: article.url,
+            published_at: article.published_at,
+            published_at_source: "rss_feed",
+            original_publication_date_verified: false
+          };
+        })
+    : [];
 
-      const hasInvalidSources =
-        Array.isArray(idea.sources) &&
-        idea.sources.length !== validSources.length;
+  const hasInvalidSources =
+    Array.isArray(idea.sources) &&
+    idea.sources.length !== validSources.length;
 
-      return {
-        ...idea,
-        sources: validSources,
-        published_at:
-          validSources.length > 0
-            ? validSources[0].published_at
-            : null,
-        verification_needed: [
-          ...(Array.isArray(idea.verification_needed)
-            ? idea.verification_needed
-            : []),
-          ...(hasInvalidSources
-            ? ["Unele surse furnizate de AI nu au fost găsite în RSS."]
-            : [])
-        ]
-      };
-    });
+  const hasUnverifiedOriginalDate = validSources.length > 0;
+
+  const verificationNeeded = [
+    ...(Array.isArray(idea.verification_needed)
+      ? idea.verification_needed
+      : []),
+    ...(hasInvalidSources
+      ? ["Unele surse furnizate de AI nu au fost găsite în RSS."]
+      : []),
+    ...(hasUnverifiedOriginalDate
+      ? ["Data din RSS nu confirmă data publicării originale. Verifică articolul înainte de a-l prezenta ca știre recentă."]
+      : [])
+  ];
+
+  return {
+    ...idea,
+    sources: validSources,
+    published_at:
+      validSources.length > 0
+        ? validSources[0].published_at
+        : null,
+    verification_needed: verificationNeeded
+  };
+});
 
     const ideasWithoutValidNewsSources = generated.ideas.filter(
       (idea) =>
