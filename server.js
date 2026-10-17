@@ -1303,6 +1303,37 @@ REGULA PRINCIPALĂ: SPECIFICITATE
 5. Fiecare scenariu trebuie să conțină informație concretă, nu doar promisiuni, clișee sau apeluri la follow.
 6. Nu inventa citate, transferuri, conflicte, statistici, meciuri, rezultate, trofee sau detalii biografice.
 7. Nu transforma o ipoteză editorială într-un fapt.
+**REGULI PENTRU SCENARII — DURATĂ ȘI CALITATE**
+
+8. **Durata scenariului trebuie adaptată subiectului:**
+
+   - Știri rapide, transferuri și declarații: 15–25 de secunde.
+   - Comparații, opinii argumentate și controverse: 30–45 de secunde.
+   - Povești despre fotbaliști, topuri și analize: 45–60 de secunde.
+   - Nu lungi artificial scenariul pentru a atinge o durată fixă.
+
+9. **Scrie textul integral pentru narare.** Scenariul trebuie să poată fi citit direct la înregistrare, fără ca utilizatorul să fie nevoit să inventeze propoziții suplimentare.
+
+10. **Construiește scenariul într-o succesiune logică:**
+
+- HOOK: o întrebare, o afirmație surprinzătoare sau un contrast concret care captează atenția.
+- CONTEXT: prezintă rapid fotbalistul, echipa, meciul sau evenimentul despre care vorbești.
+- DEZVOLTARE: explică informația principală folosind detalii concrete, exemple, comparații relevante sau date verificate.
+- MOMENT FORTE: oferă concluzia, contrastul sau detaliul cel mai interesant al poveștii.
+- FINAL: încheie natural, eventual cu o întrebare specifică ce încurajează comentariile.
+
+11. **Nu limita scenariul la 4 propoziții scurte.** Dezvoltă ideea suficient pentru durata aleasă, folosind propoziții naturale și informații care adaugă valoare. Nu impune un număr fix de puncte sau paragrafe.
+
+12. **Adaugă indicații de montaj pentru fiecare secvență:** intervalul aproximativ, imaginile recomandate, textul scurt afișat pe ecran și momentul schimbării cadrului. Indicațiile de montaj trebuie separate clar de textul pentru narare.
+
+13. **Evită umplutura:** nu repeta aceeași informație în mai multe formulări, nu folosi introduceri lungi și nu adăuga apeluri generice la follow doar pentru a prelungi clipul.
+
+14. **Păstrează acuratețea factuală:** nu inventa statistici, rezultate, citate sau detalii biografice. Dacă o afirmație relevantă nu poate fi verificată din sursele disponibile, marcheaz-o explicit pentru verificare și nu o prezenta drept fapt confirmat.
+
+15. **Optimizează pentru F1000:** prioritizează un început care oprește scroll-ul, informații care mențin interesul, o concluzie memorabilă și un motiv concret pentru care spectatorul ar dori să urmărească în continuare contul. Nu garanta un anumit număr de urmăritori câștigați.
+
+16. **Adaptează structura la subiect.** Nu transforma toate ideile în aceeași poveste cu aceleași cinci etape mecanice. Ordinea și ritmul pot varia dacă asta face scenariul mai captivant.
+
 VERIFICAREA INFORMAȚIILOR
 8. Datele live din Supabase pot susține numai afirmații despre metricile prezente în payload.
 9. Exemplele istorice sunt date furnizate separat, nu statistici live.
