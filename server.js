@@ -1399,7 +1399,7 @@ FORMATUL FIECĂREI IDEI
 - title: titlu specific, cu subiect identificabil
 - category
 - hook: introducere concretă, gata de rostit
-- script: text integral pentru narare, scris ca un singur paragraf coerent, cu propoziții complete, tranziții naturale și informații concrete; NU returna o listă de replici sau puncte numerotate. Respectă lungimile orientative din regulile pentru scenarii.
+- script: text integral pentru narare, care CONTINUĂ după hook fără să îl repete sau să îl reformuleze. Hook-ul este afișat separat și NU face parte din textul scriptului. Începe direct cu următoarea informație relevantă, dezvoltă subiectul logic și încheie natural. Scrie ca un singur paragraf coerent, cu propoziții complete și tranziții naturale, fără listă sau puncte numerotate.
 - video_title
 - hashtags
 - justification: explică de ce merită testată, fără a inventa rezultate
