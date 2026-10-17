@@ -450,6 +450,45 @@ function renderAIIdeas(data) {
       idea.verification_needed
     );
 
+    const evidenceLabel =
+      idea.evidence_type === "recent_news"
+        ? "ȘTIRE RECENTĂ"
+        : "IDEE ISTORICĂ";
+
+    addAIText(card, "h4", evidenceLabel);
+
+    if (idea.published_at) {
+      addAIText(
+        card,
+        "p",
+        `Data publicării: ${idea.published_at}`
+      );
+    }
+
+    if (Array.isArray(idea.sources) && idea.sources.length > 0) {
+      addAIText(card, "h4", "SURSE");
+
+      idea.sources.forEach((source) => {
+        if (!source || !source.url) return;
+
+        const link = document.createElement("a");
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = `${source.title || "Deschide articolul"}${
+          source.published_at ? ` — ${source.published_at}` : ""
+        }`;
+
+        card.appendChild(link);
+      });
+    } else if (idea.evidence_type === "recent_news") {
+      addAIText(
+        card,
+        "p",
+        "Atenție: sursa știrii nu este disponibilă."
+      );
+    }
+
     addAIText(card, "h4", "PLAN DE TESTARE");
     addAIText(
       card,
