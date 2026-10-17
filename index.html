@@ -397,7 +397,14 @@ function renderAIIdeas(data) {
     addAIText(card, "h4", "HOOK");
     addAIText(card, "p", idea.hook || "Nespecificat");
 
-    addAIList(card, "SCENARIU", idea.script, true);
+  addAIText(card, "h4", "SCENARIU");
+addAIText(
+  card,
+  "p",
+  Array.isArray(idea.script)
+    ? idea.script.join(" ")
+    : idea.script || "Scenariu indisponibil"
+);
 
     addAIText(card, "h4", "TITLU PENTRU CLIP");
     addAIText(card, "p", idea.video_title || "Nespecificat");
