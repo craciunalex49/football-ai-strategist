@@ -1353,7 +1353,7 @@ console.log(
   `Football RSS: ${recentFootballNews.length} articole recente găsite.`
 );
     const userPayload = {
-      focus: requestedFocus || "Alege ideile cu cel mai bun potențial pentru creșterea unui cont românesc de fotbal.",
+     focus: requestedFocus || "",
       live_dataset: {
         source: "Supabase tiktok_videos",
         total_videos: allVideos.length,
@@ -1391,6 +1391,18 @@ console.log(
 
     const prompt = `
 Analizează datele următoare și generează exact 5 idei distincte.
+SUBIECTUL PREFERAT:
+- Citește câmpul "focus" din datele primite.
+- Dacă "focus" conține un subiect introdus de utilizator, toate cele 5 idei trebuie să fie direct relevante pentru acel subiect.
+- Dacă "focus" nu este gol, include în "justification" explicația concretă a legăturii fiecărei idei cu subiectul solicitat.
+- Toate cele 5 idei trebuie să fie distincte între ele, dar să respecte același subiect preferat.
+- Dacă subiectul nu are suficiente știri recente în recent_news, completează cu idei istorice sau evergreen despre acel subiect, fără să inventezi actualitate.
+- Nu folosi știri despre alte subiecte doar pentru a completa numărul de idei.
+- Nu devia către alte subiecte de fotbal doar pentru că au mai multe știri disponibile.
+- Pentru un jucător, concentrează ideile pe acel jucător: știri recente verificate, performanțe, carieră, recorduri și povești istorice relevante.
+- Pentru o competiție, concentrează ideile pe acea competiție, echipele participante, jucători și evenimente relevante.
+- Respectă în continuare regulile privind sursele, actualitatea și verificarea informațiilor.
+- Dacă "focus" este gol, folosește strategia generală și datele contului pentru a selecta ideile.
 ACTUALITATE:
 - Folosește recent_news pentru ideile bazate pe știri recente.
 - Prioritizează articolele publicate în ultimele 7 zile.
