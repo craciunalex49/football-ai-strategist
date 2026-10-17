@@ -1312,12 +1312,11 @@ REGULA PRINCIPALĂ: SPECIFICITATE
    - Povești despre fotbaliști, topuri și analize: 45–60 de secunde.
    - Nu lungi artificial scenariul pentru a atinge o durată fixă.
 
-9. **Scrie un scenariu complet, nu un rezumat al scenariului.** Pentru fiecare idee, oferă textul integral care va fi rostit în clip, în limba română, natural și gata de înregistrare. Respectă următoarele lungimi orientative:
-- Știri rapide: aproximativ 40–65 de cuvinte.
-- Comparații, opinii și controverse: aproximativ 75–110 cuvinte.
-- Povești, topuri și analize: aproximativ 110–150 de cuvinte.
+9. **FORMAT OBLIGATORIU AL SCENARIULUI:** Pentru fiecare idee, câmpul SCENARIU trebuie să conțină textul integral al narațiunii, scris în limba română, gata de citit și înregistrat. Nu returna un rezumat, o listă de idei, un plan sau instrucțiuni despre ce ar trebui spus. Narațiunea trebuie să curgă natural, cu propoziții complete și tranziții logice între ele.
 
-Textul narat trebuie să fie separat de indicațiile de montaj. Nu prezenta doar patru puncte cu rezumate. Dezvoltă fiecare idee prin explicații concrete și tranziții naturale, fără repetiții sau umplutură. Dacă nu există suficiente informații verificate pentru a susține un scenariu mai lung, păstrează-l mai scurt și semnalează ce trebuie verificat.
+Pentru comparații, opinii și controverse, urmărește aproximativ 75–110 cuvinte rostite. Pentru povești, topuri și analize, urmărește aproximativ 110–150 de cuvinte. Pentru știri rapide, urmărește aproximativ 40–65 de cuvinte. Aceste intervale sunt orientative: nu inventa informații și nu adăuga umplutură pentru a le atinge.
+
+Indicațiile de montaj trebuie să fie separate de narațiune și să specifice secvența, intervalul aproximativ, imaginile recomandate și textul afișat pe ecran. Nu înlocui narațiunea cu indicațiile de montaj.
 
 10. **Construiește scenariul într-o succesiune logică:**
 
