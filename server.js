@@ -1658,18 +1658,25 @@ generated.ideas = generated.ideas.map((idea) => ({
         ]
       };
     });
- const ideasWithoutValidNewsSources = generated.ideas.filter(
+
+    const ideasWithoutValidNewsSources = generated.ideas.filter(
       (idea) =>
         idea.evidence_type === "recent_news" &&
         (!Array.isArray(idea.sources) || idea.sources.length === 0)
     );
 
-    if (ideasWithoutValidNewsSources.length > 0) {
-      return res.status(502).json({
-        error:
-          "At least one recent-news idea has no valid RSS source. Try again."
-      });
+    for (const idea of ideasWithoutValidNewsSources) {
+      idea.evidence_type = "historical";
+      idea.sources = [];
+      idea.published_at = null;
+      idea.verification_needed = [
+        ...(Array.isArray(idea.verification_needed)
+          ? idea.verification_needed
+          : []),
+        "Ideea nu are o sursă RSS validată; trateaz-o ca idee istorică și verifică informațiile înainte de publicare."
+      ];
     }
+
     if (!Array.isArray(generated.ideas) || generated.ideas.length !== 5) {
       return res.status(502).json({
         error: "The AI response did not contain exactly five ideas. Try again."
