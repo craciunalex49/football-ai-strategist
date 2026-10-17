@@ -1409,7 +1409,7 @@ FORMATUL FIECĂREI IDEI
 - verification_needed: afirmații concrete de verificat
 - test_plan
 - metrics_to_track
-- visual_suggestions: generează exact 4 obiecte pentru fiecare idee; fiecare obiect trebuie să conțină `interval` (de exemplu „00:00–00:03”), `visual` (descriere concretă a fotografiei sau videoclipului care trebuie afișat), `description` (ce trebuie să vadă spectatorul) și `on_screen_text` (text scurt afișat pe ecran). Nu lăsa niciun câmp gol și nu returna obiecte `{}`.
+- visual_suggestions: listă de 4 obiecte; fiecare obiect conține interval, visual și on_screen_text
 - interval: timpul exact din clip, de exemplu "00:00-00:03"
 - visual: descriere concretă a imaginii sau videoclipului de folosit, de exemplu "cadru cu Lamine Yamal în timpul meciului, cu mingea la picior"; nu lăsa niciodată câmpul gol
 - on_screen_text: textul scurt afișat pe ecran în secvența respectivă
