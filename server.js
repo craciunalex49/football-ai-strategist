@@ -988,7 +988,7 @@ app.get("/stored-videos", async (req, res) => {
   }
 });
 
-async function fetchRecentFootballNews() {
+async function fetchRecentFootballNews(focus = "") {
   const feeds = [
     {
       name: "GSP",
@@ -1347,8 +1347,7 @@ FORMATUL FIECĂREI IDEI
 - metrics_to_track
 Răspunde în română. Generează exact 5 idei distincte.
 `;
-const recentFootballNews = await fetchRecentFootballNews();
-
+const recentFootballNews = await fetchRecentFootballNews(requestedFocus);
 console.log(
   `Football RSS: ${recentFootballNews.length} articole recente găsite.`
 );
