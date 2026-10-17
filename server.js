@@ -1398,6 +1398,7 @@ ACTUALITATE:
 - Folosește titlul, data și URL-ul articolului pentru fiecare idee de actualitate.
 - Dacă nu există suficiente știri relevante, generează idei istorice și etichetează-le clar.
 - Nu pretinde că ai verificat informații suplimentare.
+
 Returnează exclusiv un obiect JSON cu această structură:
 {
   "summary": "Rezumatul analizei",
@@ -1418,13 +1419,32 @@ Returnează exclusiv un obiect JSON cu această structură:
         "verifiability": 4,
         "shareability": 4
       },
-      "evidence_type": "date_live",
+      "evidence_type": "recent_news",
       "verification_needed": [],
+      "sources": [
+        {
+          "title": "Titlul exact al articolului din recent_news",
+          "url": "URL-ul exact al articolului din recent_news",
+          "published_at": "Data publicării din recent_news"
+        }
+      ],
+      "published_at": "Data publicării articolului principal sau null",
       "test_plan": "Cum testăm ideea",
       "metrics_to_track": ["views", "likes", "comments", "shares"]
     }
   ]
 }
+
+REGULI PENTRU SURSE:
+- Folosește numai articole existente în recent_news.
+- Copiază exact titlul, URL-ul și data publicării.
+- Nu inventa și nu modifica URL-uri.
+- Pentru ideile istorice folosește "evidence_type": "historical"
+  și "sources": [].
+- Pentru ideile de actualitate folosește "evidence_type": "recent_news".
+- Dacă nu există un articol relevant, nu prezenta ideea drept știre.
+- Nu pretinde că un articol confirmă detalii care nu apar în titlul
+  sau descrierea lui.
 
 Scorul trebuie să respecte ponderile din instrucțiunile sistemului.
 Nu inventa statistici. Separă datele live de exemplele istorice.
@@ -1523,14 +1543,86 @@ const content = (result.candidates?.[0]?.content?.parts || [])
 
     let generated;
 
-    try {
-      generated = JSON.parse(content);
-    } catch {
+try {
+  generated = JSON.parse(content);
+} catch {
+  return res.status(502).json({
+    error: "The AI service returned invalid JSON. Try again."
+  });
+}
+
+if (!generated || !Array.isArray(generated.ideas)) {
+  return res.status(502).json({
+    error: "The AI response did not contain a valid ideas array."
+  });
+}
+
+generated.ideas = generated.ideas.map((idea) => ({
+  ...idea,
+  sources: Array.isArray(idea.sources) ? idea.sources : [],
+  published_at: idea.published_at || null
+}));
+
+    // Validate generated sources against the actual RSS articles.
+    const trustedNews = new Map(
+      recentFootballNews.map((article) => [
+        article.url,
+        article
+      ])
+    );
+
+    generated.ideas = (generated.ideas || []).map((idea) => {
+      const validSources = Array.isArray(idea.sources)
+        ? idea.sources
+            .filter((source) =>
+              source &&
+              typeof source.url === "string" &&
+              trustedNews.has(source.url)
+            )
+            .map((source) => {
+              const article = trustedNews.get(source.url);
+
+              return {
+                title: article.title,
+                url: article.url,
+                published_at: article.published_at
+              };
+            })
+        : [];
+
+      const hasInvalidSources =
+        Array.isArray(idea.sources) &&
+        idea.sources.length !== validSources.length;
+
+      return {
+        ...idea,
+        sources: validSources,
+        published_at:
+          validSources.length > 0
+            ? validSources[0].published_at
+            : null,
+        verification_needed: [
+          ...(Array.isArray(idea.verification_needed)
+            ? idea.verification_needed
+            : []),
+          ...(hasInvalidSources
+            ? ["Unele surse furnizate de AI nu au fost găsite în RSS."]
+            : [])
+        ]
+      };
+    });
+ const ideasWithoutValidNewsSources = generated.ideas.filter(
+      (idea) =>
+        idea.evidence_type === "recent_news" &&
+        (!Array.isArray(idea.sources) || idea.sources.length === 0)
+    );
+
+    if (ideasWithoutValidNewsSources.length > 0) {
       return res.status(502).json({
-        error: "The AI service returned invalid JSON. Try again."
+        error:
+          "At least one recent-news idea has no valid RSS source. Try again."
       });
     }
-
     if (!Array.isArray(generated.ideas) || generated.ideas.length !== 5) {
       return res.status(502).json({
         error: "The AI response did not contain exactly five ideas. Try again."
