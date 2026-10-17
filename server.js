@@ -1628,11 +1628,16 @@ const content = (result.candidates?.[0]?.content?.parts || [])
       });
     }
 
-    let generated;
+ let generated;
 
 try {
   generated = JSON.parse(content);
-} catch {
+} catch (error) {
+  console.error("GEMINI INVALID JSON:", {
+    message: error.message,
+    response: content.slice(0, 3000)
+  });
+
   return res.status(502).json({
     error: "The AI service returned invalid JSON. Try again."
   });
