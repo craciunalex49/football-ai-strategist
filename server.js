@@ -1631,6 +1631,31 @@ const trustedNews = new Map(
   ])
 );
 
+console.log(
+  "AI SOURCES DEBUG:",
+  JSON.stringify(
+    (generated.ideas || []).map((idea) => ({
+      title: idea.title,
+      evidence_type: idea.evidence_type,
+      sources: idea.sources
+    })),
+    null,
+    2
+  )
+);
+
+console.log(
+  "RSS URLS DEBUG:",
+  JSON.stringify(
+    recentFootballNews.slice(0, 5).map((article) => ({
+      title: article.title,
+      url: article.url
+    })),
+    null,
+    2
+  )
+);
+
 generated.ideas = (generated.ideas || []).map((idea) => {
   const validSources = Array.isArray(idea.sources)
     ? idea.sources
