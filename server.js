@@ -536,7 +536,7 @@ app.get("/sync-videos", async (req, res) => {
       "create_time",
       "cover_image_url",
       "share_url",
-      "video_deion",
+     "video_description",
       "duration",
       "title",
       "like_count",
