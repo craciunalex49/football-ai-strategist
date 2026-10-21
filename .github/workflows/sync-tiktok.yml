@@ -1,0 +1,24 @@
+
+name: Hourly TikTok Sync
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      - name: Sync TikTok videos
+        run: |
+          curl --fail --show-error --silent \
+            --max-time 300 \
+            --retry 2 \
+            --retry-delay 10 \
+            "https://football-ai-strategist-api.onrender.com/sync-videos"
